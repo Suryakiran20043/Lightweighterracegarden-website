@@ -1,0 +1,325 @@
+// Prisma schema for Light Weight Terrace Garden Organics
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  STAFF
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
+model User {
+  id            String         @id @default(cuid())
+  name          String?
+  email         String         @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role           @default(CUSTOMER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  
+  accounts      Account[]
+  sessions      Session[]
+  addresses     Address[]
+  orders        Order[]
+  reviews       Review[]
+  wishlist      Wishlist?
+  rewardPoints  RewardPoint[]
+  referrals     Referral[]     @relation("Referrer")
+  referredBy    Referral[]     @relation("Referee")
+  notifications Notification[]
+  auditLogs     AuditLog[]
+}
+
+model Account {
+  id            String   @id @default(cuid())
+  userId        String
+  type          String
+  provider      String
+  providerId    String
+  accessToken   String?
+  refreshToken  String?
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  token        String   @unique
+  expiresAt    DateTime
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Address {
+  id           String      @id @default(cuid())
+  userId       String
+  street       String
+  city         String
+  state        String
+  postalCode   String
+  country      String
+  type         AddressType @default(SHIPPING)
+  isDefault    Boolean     @default(false)
+  phone        String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  image       String?
+  parentId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  products    Product[]
+}
+
+model Product {
+  id            String           @id @default(cuid())
+  name          String
+  slug          String           @unique
+  description   String
+  categoryId    String
+  basePrice     Float
+  isFeatured    Boolean          @default(false)
+  images        String[]
+  status        String           @default("ACTIVE") // ACTIVE, DRAFT, OUT_OF_STOCK
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  category      Category         @relation(fields: [categoryId], references: [id])
+  variants      ProductVariant[]
+  reviews       Review[]
+  wishlists     Wishlist[]
+}
+
+model ProductVariant {
+  id          String      @id @default(cuid())
+  productId   String
+  name        String      // e.g., "5 kg Pack", "Grow Bag Starter Kit"
+  price       Float
+  sku         String      @unique
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  product     Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventory   Inventory?
+  orderItems  OrderItem[]
+}
+
+model Inventory {
+  id                  String         @id @default(cuid())
+  variantId           String         @unique
+  stock               Int            @default(0)
+  lowStockAlertLimit  Int            @default(5)
+  updatedAt           DateTime       @updatedAt
+
+  variant             ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id             String       @id @default(cuid())
+  userId         String
+  status         OrderStatus  @default(PENDING)
+  total          Float
+  discount       Float        @default(0.0)
+  tax            Float        @default(0.0)
+  shippingCost   Float        @default(0.0)
+  couponCode     String?
+  paymentMethod  String?      // STRIPE, RAZORPAY, COD
+  paymentId      String?      // payment gateway transaction id
+  trackingNumber String?
+  shippingCarrier String?      // e.g. "SHIPROCKET"
+  trackingStatus String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id])
+  items          OrderItem[]
+}
+
+model OrderItem {
+  id             String         @id @default(cuid())
+  orderId        String
+  variantId      String
+  quantity       Int
+  price          Float          // Price at time of order
+
+  order          Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant        ProductVariant @relation(fields: [variantId], references: [id])
+  returnRequests ReturnRequest[]
+}
+
+model Coupon {
+  id          String     @id @default(cuid())
+  code        String     @unique
+  type        CouponType @default(PERCENTAGE)
+  value       Float
+  expiresAt   DateTime
+  isActive    Boolean    @default(true)
+  maxUses     Int        @default(100)
+  usedCount   Int        @default(0)
+  createdAt   DateTime   @default(now())
+}
+
+model Review {
+  id              String   @id @default(cuid())
+  userId          String
+  productId       String
+  rating          Int      // 1 to 5 stars
+  title           String?
+  comment         String
+  images          String[]
+  isVerifiedBuyer Boolean  @default(false)
+  isModerated     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Wishlist {
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  createdAt DateTime  @default(now())
+  
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products  Product[]
+}
+
+model RewardPoint {
+  id          String   @id @default(cuid())
+  userId      String
+  points      Int
+  description String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Referral {
+  id           String   @id @default(cuid())
+  referrerId   String
+  refereeId    String
+  pointsEarned Int
+  status       String   @default("PENDING") // PENDING, COMPLETED, EXPIRED
+  createdAt    DateTime @default(now())
+
+  referrer     User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee      User     @relation("Referee", fields: [refereeId], references: [id], onDelete: Cascade)
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String
+  image       String?
+  summary     String
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tags        Tag[]
+}
+
+model Tag {
+  id        String     @id @default(cuid())
+  name      String     @unique
+  slug      String     @unique
+  blogs     BlogPost[]
+}
+
+model CMSPage {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  content        String
+  seoTitle       String?
+  seoDescription String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ReturnRequest {
+  id           String       @id @default(cuid())
+  orderItemId  String
+  reason       String
+  status       ReturnStatus @default(REQUESTED)
+  refundAmount Float        @default(0.0)
+  createdAt    DateTime     @default(now())
+
+  orderItem    OrderItem    @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String
+  action      String
+  details     String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

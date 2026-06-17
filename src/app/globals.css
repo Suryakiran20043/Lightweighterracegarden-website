@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-forest: #1E4D2B;
+  --color-moss: #4F6F52;
+  --color-leaf: #739072;
+  --color-sage: #A6B89B;
+  --color-brown: #6B4F3B;
+  --color-terracotta: #C97B63;
+  --color-ivory: #F8F6F1;
+  --color-warm-white: #FCFBF8;
+  --color-stone: #E6E2DA;
+  --color-charcoal: #2E2E2E;
+  --color-gold: #D6A84F;
+
+  --font-serif: 'Montserrat', sans-serif;
+  --font-sans: 'Montserrat', 'Poppins', 'Inter', sans-serif;
+  --font-alt: 'Montserrat', sans-serif;
+}
+
+:root {
+  --background: #FCFBF8; /* Warm White */
+  --foreground: #2E2E2E; /* Charcoal */
+  --border: #E6E2DA;     /* Stone */
+  --primary: #1E4D2B;    /* Forest Green */
+  --primary-foreground: #FCFBF8;
+  --accent: #D6A84F;     /* Golden Harvest */
+  --muted: #4F6F52;      /* Moss Green */
+  --muted-foreground: #739072;
+}
+
+/* Base resets & premium visual styling */
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Montserrat', 'Poppins', 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.7;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  color: #1A1A1A;
+  letter-spacing: -0.02em;
+}
+
+/* Custom scrollbar for smooth editorial feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F6F1;
+}
+::-webkit-scrollbar-thumb {
+  background: #A6B89B;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #739072;
+}
+
+/* WCAG AA focus indicator styling */
+*:focus-visible:not(input):not(textarea):not(select) {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Smooth Lenis Scrolling Core Reset */
+html.lenis {
+  height: auto;
+}
+.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis-stopped {
+  overflow: hidden;
+}
+.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
+/* Micro-interactions: Custom ripple, magnetic effects, and tilt animations */
+.premium-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.premium-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(79, 111, 82, 0.15);
+}
+
+/* Custom Cursor Styling */
+.custom-cursor {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #1E4D2B;
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: difference;
+  transition: width 0.2s, height 0.2s, background-color 0.2s;
+}
+.custom-cursor-dot {
+  width: 4px;
+  height: 4px;
+  background-color: #1E4D2B;
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Floating leaf animation keyframes */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+.floating-leaf {
+  animation: float 6s ease-in-out infinite;
+}
