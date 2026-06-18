@@ -68,46 +68,52 @@ export default function Home() {
       <FeaturedCategories />
 
       {/* 3. Best Sellers Carousel / Grid */}
-      <section className="py-24 bg-white border-b border-stone/50 relative z-10 font-alt">
-        <div className="w-full px-4 sm:px-6 lg:px-12">
+      <section className="py-24 bg-white relative z-10">
+        <div className="w-full px-4 sm:px-6 lg:px-12 max-w-screen-2xl mx-auto">
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-16 gap-4">
             <div className="space-y-3">
-              <span className="text-xs uppercase tracking-widest text-brown font-semibold">Favorites Among Growers</span>
-              <h2 className="text-3xl sm:text-4xl font-serif text-forest">Our Best Sellers</h2>
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#4CAF50] font-bold">
+                Favorites Among Growers
+              </span>
+              <h2 className="text-4xl sm:text-5xl font-serif text-[#1B5E20]">
+                Our Best Sellers
+              </h2>
             </div>
-            <Link href="/shop" className="inline-flex items-center gap-1.5 text-sm font-semibold text-forest hover:text-brown transition-colors">
+            <Link href="/shop" className="inline-flex items-center gap-2 text-sm font-semibold text-[#2E7D32] hover:text-[#1B5E20] transition-colors">
               Explore Full Catalog <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {bestSellers.map((product) => {
               const inWish = isInWishlist(product.id);
               return (
-                <div key={product.id} className="bg-warm-white border border-stone/30 rounded-xl overflow-hidden shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group">
-                  <div className="relative">
-                    <img src={product.image} alt={product.name} className="w-full h-64 object-cover transition-transform duration-500 group-hover:scale-103" />
+                <div key={product.id} className="group relative bg-white border border-stone-100 rounded-[20px] overflow-hidden shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-500 flex flex-col">
+                  <div className="relative h-72 overflow-hidden rounded-t-[20px]">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     <button
                       onClick={() => toggleItem(product)}
-                      className={`absolute top-4 right-4 p-2 rounded-full shadow-md transition-colors ${
-                        inWish ? 'bg-terracotta text-white' : 'bg-white/80 hover:bg-white text-stone-400 hover:text-terracotta'
+                      className={`absolute top-4 right-4 p-2.5 rounded-full shadow-sm transition-all duration-300 hover:scale-110 ${
+                        inWish ? 'bg-[#E53935] text-white' : 'bg-white/90 backdrop-blur-md text-stone-400 hover:text-[#E53935]'
                       }`}
                       aria-label="Toggle Wishlist"
                     >
-                      <Heart className="h-4 w-4 fill-current" />
+                      <Heart className={`h-5 w-5 ${inWish ? 'fill-current' : ''}`} />
                     </button>
                   </div>
-                  <div className="p-5 space-y-4">
-                    <div className="space-y-1">
-                      <h3 className="font-serif text-lg text-forest truncate">{product.name}</h3>
-                      <div className="flex items-center gap-1 text-xs font-semibold text-gold">
-                        <Star className="h-3.5 w-3.5 fill-current" />
+                  <div className="p-6 flex flex-col flex-1 justify-between">
+                    <div className="space-y-2 mb-4">
+                      <div className="flex justify-between items-start gap-4">
+                        <h3 className="font-serif text-xl font-semibold text-[#1A1A1A] line-clamp-2">{product.name}</h3>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-[#F59E0B]">
+                        <Star className="h-4 w-4 fill-current" />
                         <span>{product.rating}</span>
                       </div>
                     </div>
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-sm font-bold text-forest">₹{product.price.toFixed(2)}</span>
+                    <div className="flex justify-between items-center pt-4 border-t border-stone-100">
+                      <span className="text-xl font-bold text-[#1B5E20]">₹{product.price.toFixed(2)}</span>
                       <button
                         onClick={() => addItem({
                           id: product.id,
@@ -117,10 +123,11 @@ export default function Home() {
                           sku: product.sku,
                           image: product.image
                         }, 1)}
-                        className="bg-forest hover:bg-moss text-warm-white p-2 rounded-full transition-colors"
+                        className="flex items-center gap-2 bg-[#2E7D32] hover:bg-[#1B5E20] text-white px-5 py-2.5 rounded-full transition-all duration-300 hover:shadow-md hover:-translate-y-0.5"
                         aria-label="Add to Cart"
                       >
                         <ShoppingBag className="h-4 w-4" />
+                        <span className="text-sm font-semibold">Add</span>
                       </button>
                     </div>
                   </div>
@@ -133,29 +140,33 @@ export default function Home() {
       </section>
 
       {/* 4. Why Choose Us / Quality stats */}
-      <section className="py-24 bg-ivory border-b border-stone/50 relative z-10 font-alt">
-        <div className="w-full px-4 sm:px-6 lg:px-12">
+      <section className="py-24 bg-[#FAFAFA] relative z-10">
+        <div className="w-full px-4 sm:px-6 lg:px-12 max-w-screen-2xl mx-auto">
           
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
-            <span className="text-xs uppercase tracking-widest text-brown font-semibold">Quality & Care Assurance</span>
-            <h2 className="text-3xl sm:text-4xl font-serif text-forest">Why Choose Terrace Organics</h2>
+          <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
+            <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#4CAF50] font-bold">
+              Quality & Care Assurance
+            </span>
+            <h2 className="text-4xl sm:text-5xl font-serif text-[#1B5E20]">
+              Why Choose Terrace Organics
+            </h2>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center">
-            <div className="bg-white border border-stone/30 p-8 rounded-xl space-y-4 shadow-2xs">
-              <div className="p-4 bg-forest/10 rounded-full text-forest w-fit mx-auto"><Sprout className="h-8 w-8" /></div>
-              <h3 className="font-serif text-lg text-forest">100% Certified Organic</h3>
-              <p className="text-xs text-charcoal/70 leading-relaxed">Heirloom seeds tested for 90%+ germination rates without heavy pesticide treatments.</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+            <div className="bg-white border border-stone-100 p-10 rounded-[20px] space-y-5 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="p-4 bg-[#E8F5E9] rounded-2xl text-[#2E7D32] w-fit mx-auto"><Sprout className="h-8 w-8" /></div>
+              <h3 className="font-serif text-2xl font-semibold text-[#1A1A1A]">100% Certified Organic</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Heirloom seeds tested for 90%+ germination rates without heavy pesticide treatments.</p>
             </div>
-            <div className="bg-white border border-stone/30 p-8 rounded-xl space-y-4 shadow-2xs">
-              <div className="p-4 bg-forest/10 rounded-full text-forest w-fit mx-auto"><Leaf className="h-8 w-8" /></div>
-              <h3 className="font-serif text-lg text-forest">Lightweight Guarantee</h3>
-              <p className="text-xs text-charcoal/70 leading-relaxed">Potting soil designed specifically to protect roofs from heavy structural mud stresses.</p>
+            <div className="bg-white border border-stone-100 p-10 rounded-[20px] space-y-5 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="p-4 bg-[#E8F5E9] rounded-2xl text-[#2E7D32] w-fit mx-auto"><Leaf className="h-8 w-8" /></div>
+              <h3 className="font-serif text-2xl font-semibold text-[#1A1A1A]">Lightweight Guarantee</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Potting soil designed specifically to protect roofs from heavy structural mud stresses.</p>
             </div>
-            <div className="bg-white border border-stone/30 p-8 rounded-xl space-y-4 shadow-2xs">
-              <div className="p-4 bg-forest/10 rounded-full text-forest w-fit mx-auto"><ShieldCheck className="h-8 w-8" /></div>
-              <h3 className="font-serif text-lg text-forest">Traditional Recipes</h3>
-              <p className="text-xs text-charcoal/70 leading-relaxed">Cold pressed pantry staple oils and sweeteners preserving regional culinary heritages.</p>
+            <div className="bg-white border border-stone-100 p-10 rounded-[20px] space-y-5 shadow-sm hover:shadow-md transition-shadow duration-300">
+              <div className="p-4 bg-[#E8F5E9] rounded-2xl text-[#2E7D32] w-fit mx-auto"><ShieldCheck className="h-8 w-8" /></div>
+              <h3 className="font-serif text-2xl font-semibold text-[#1A1A1A]">Traditional Recipes</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Cold pressed pantry staple oils and sweeteners preserving regional culinary heritages.</p>
             </div>
           </div>
 
@@ -163,30 +174,40 @@ export default function Home() {
       </section>
 
       {/* 5. Gardening & Organic Living Guides */}
-      <section className="py-24 bg-white relative z-10 font-alt">
-        <div className="w-full px-4 sm:px-6 lg:px-12">
+      <section className="py-24 bg-white relative z-10">
+        <div className="w-full px-4 sm:px-6 lg:px-12 max-w-screen-2xl mx-auto">
           
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-16 gap-4">
-            <div className="space-y-3">
-              <span className="text-xs uppercase tracking-widest text-brown font-semibold">Weekly Growers Tips</span>
-              <h2 className="text-3xl sm:text-4xl font-serif text-forest">Gardening & Living Guides</h2>
+            <div className="space-y-4">
+              <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#4CAF50] font-bold">
+                Weekly Growers Tips
+              </span>
+              <h2 className="text-4xl sm:text-5xl font-serif text-[#1B5E20]">
+                Gardening & Living Guides
+              </h2>
             </div>
-            <Link href="/guides" className="inline-flex items-center gap-1.5 text-sm font-semibold text-forest hover:text-brown transition-colors">
+            <Link href="/guides" className="inline-flex items-center gap-2 text-sm font-semibold text-[#2E7D32] hover:text-[#1B5E20] transition-colors">
               Read More Guides <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {gardeningGuides.map((guide) => (
-              <div key={guide.slug} className="grid grid-cols-1 sm:grid-cols-2 bg-warm-white border border-stone/30 rounded-xl overflow-hidden shadow-2xs hover:shadow-xs transition-shadow">
-                <img src={guide.image} alt={guide.title} className="h-48 sm:h-full w-full object-cover" />
-                <div className="p-6 flex flex-col justify-between space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="font-serif text-base text-forest leading-snug">{guide.title}</h3>
-                    <p className="text-xs text-charcoal/75 leading-relaxed">{guide.desc}</p>
+              <div key={guide.slug} className="group grid grid-cols-1 sm:grid-cols-2 bg-white border border-stone-100 rounded-[20px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300">
+                <div className="overflow-hidden">
+                  <img src={guide.image} alt={guide.title} className="h-64 sm:h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                </div>
+                <div className="p-8 flex flex-col justify-between space-y-4">
+                  <div className="space-y-3">
+                    <h3 className="font-serif text-2xl font-semibold text-[#1A1A1A] leading-snug group-hover:text-[#2E7D32] transition-colors">
+                      {guide.title}
+                    </h3>
+                    <p className="text-sm text-[#6B7280] leading-relaxed">
+                      {guide.desc}
+                    </p>
                   </div>
-                  <Link href={`/guides/${guide.slug}`} className="inline-flex items-center gap-1 text-xs font-semibold text-forest hover:text-brown transition-colors">
-                    Read Guide &rarr;
+                  <Link href={`/guides/${guide.slug}`} className="inline-flex items-center gap-2 text-sm font-semibold text-[#2E7D32] group-hover:text-[#1B5E20] transition-colors mt-auto">
+                    Read Guide <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </div>
               </div>

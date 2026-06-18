@@ -187,40 +187,82 @@ function ShopContent() {
       <div className="w-full space-y-8">
         
         {/* Title */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-serif text-forest">Shop Collection</h1>
-          <p className="text-sm text-charcoal/70 font-alt">
+        <div className="space-y-3 pt-6 pb-4">
+          <h1 className="text-5xl md:text-6xl font-serif text-[#1B5E20] tracking-tight">Shop Collection</h1>
+          <p className="text-base text-[#6B7280] max-w-2xl">
             Returning to nature through premium, conscious terrace gardening and organic living.
           </p>
         </div>
 
+        {/* Selected Vegetables Premium Horizontal Section */}
+        {activeCategory === 'all' && (
+          <div className="w-full my-10 bg-[#F8FDF9] rounded-[30px] p-8 sm:p-12 border border-[#E8F5E9] shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 gap-4">
+              <div className="space-y-3 max-w-2xl">
+                <h2 className="text-3xl sm:text-4xl font-serif text-[#1B5E20]">Selected Vegetables</h2>
+                <p className="text-[#6B7280] text-base sm:text-lg">
+                  Handpicked vegetable seeds with high germination rates for your terrace garden.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory hide-scrollbar -mx-8 px-8 sm:mx-0 sm:px-0">
+              {catalog.filter(p => p.category === 'vegetables').map(product => (
+                <div key={`featured-${product.id}`} className="min-w-[280px] sm:min-w-[320px] bg-white rounded-[20px] p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group snap-start border border-stone-100 flex flex-col">
+                  <div className="relative rounded-[16px] overflow-hidden aspect-[4/3] mb-5">
+                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <button className="bg-white text-[#1A1A1A] font-medium text-sm px-6 py-2.5 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#2E7D32] hover:text-white">
+                        Quick View
+                      </button>
+                    </div>
+                  </div>
+                  <h3 className="font-serif text-lg font-bold text-[#1A1A1A] mb-1 group-hover:text-[#2E7D32] transition-colors">{product.name}</h3>
+                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-stone-50">
+                    <span className="text-[#1B5E20] font-bold text-lg">₹{product.price}</span>
+                    <button 
+                      onClick={() => addItem({ id: product.id, productId: product.productId, name: product.name, price: product.price, sku: product.sku, image: product.image })}
+                      className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all hover:shadow-md flex items-center gap-2"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                      Add
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Filters and Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center border-b border-stone/30 pb-6">
+        <div className="flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center border-b border-stone-200 pb-8 pt-4">
           {/* Categories Filter tab buttons */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {[
-              { id: 'all', name: 'All Products' },
-              { id: 'vegetables', name: 'Vegetables' },
-              { id: 'micro-seeds', name: 'Micro seeds' },
-              { id: 'flower-seeds', name: 'Flower seeds' },
-              { id: 'fruits-seeds', name: 'Fruits seeds' },
-              { id: 'roots-tubers', name: 'Roots and tubers' },
-              { id: 'pickles-powder', name: 'Pickles & Powder' },
-              { id: 'sweet-snacks', name: 'Sweet & Snacks' },
-              { id: 'seasonal', name: 'Seasonal collection' },
-              { id: 'pots-planters', name: 'Pots & Planters' },
-              { id: 'spices-masalas', name: 'Seasonings, Spices & Masalas' },
+              { id: 'all', name: 'All Products', icon: '✨' },
+              { id: 'vegetables', name: 'Vegetables', icon: '🌱' },
+              { id: 'micro-seeds', name: 'Micro Seeds', icon: '🌿' },
+              { id: 'flower-seeds', name: 'Flower Seeds', icon: '🌸' },
+              { id: 'fruits-seeds', name: 'Fruit Seeds', icon: '🍎' },
+              { id: 'roots-tubers', name: 'Roots & Tubers', icon: '🥔' },
+              { id: 'pickles-powder', name: 'Pickles & Powders', icon: '🥒' },
+              { id: 'sweet-snacks', name: 'Sweets & Snacks', icon: '🍬' },
+              { id: 'seasonal', name: 'Seasonal Collection', icon: '☀️' },
+              { id: 'pots-planters', name: 'Pots & Planters', icon: '🪴' },
+              { id: 'spices-masalas', name: 'Spices & Masalas', icon: '🌶️' },
             ].map((cat) => (
               <button
                 key={cat.id}
                 onClick={() => selectCategory(cat.id)}
-                className={`px-4 py-2 text-xs font-semibold rounded-full border transition-all duration-200 ${
+                className={`flex items-center gap-2 px-5 h-[44px] text-[13px] font-medium rounded-full border transition-all duration-300 ${
                   activeCategory === cat.id
-                    ? 'bg-forest border-forest text-warm-white'
-                    : 'bg-white border-stone/30 text-charcoal hover:border-forest'
+                    ? 'bg-[#4CAF50] border-[#4CAF50] text-white shadow-[0_4px_12px_rgba(76,175,80,0.3)]'
+                    : 'bg-white border-stone-200 text-[#6B7280] hover:border-[#4CAF50] hover:text-[#4CAF50] hover:-translate-y-0.5 hover:shadow-sm'
                 }`}
               >
-                {cat.name}
+                <span className="text-base">{cat.icon}</span>
+                <span>{cat.name}</span>
               </button>
             ))}
           </div>
@@ -277,20 +319,20 @@ function ShopContent() {
               return (
                 <div
                   key={product.id}
-                  className="bg-white border border-stone/30 rounded-xl overflow-hidden shadow-2xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between group"
+                  className="bg-white border border-stone-200 rounded-[20px] overflow-hidden shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-500 flex flex-col justify-between group"
                 >
-                  <div className="relative">
+                  <div className="relative overflow-hidden aspect-[4/3] sm:aspect-square">
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-full h-56 object-cover transition-transform duration-500 group-hover:scale-103"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
                     
                     {/* Wishlist toggle */}
                     <button
                       onClick={() => toggleItem({ id: product.id, name: product.name, price: product.price, image: product.image })}
-                      className={`absolute top-4 right-4 p-2 rounded-full shadow-md transition-colors duration-200 ${
-                        inWish ? 'bg-terracotta text-white' : 'bg-white/80 hover:bg-white text-stone-400 hover:text-terracotta'
+                      className={`absolute top-4 right-4 p-2.5 rounded-full shadow-md backdrop-blur-sm transition-colors duration-300 z-10 ${
+                        inWish ? 'bg-[#ff6b6b]/90 text-white' : 'bg-white/80 hover:bg-white text-[#6B7280] hover:text-[#ff6b6b]'
                       }`}
                       aria-label="Toggle Wishlist"
                     >
@@ -299,21 +341,21 @@ function ShopContent() {
                   </div>
 
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                    <div className="space-y-1.5">
-                      <div className="flex justify-between items-center text-[10px] text-brown font-semibold uppercase tracking-wider font-alt">
-                        <span>{product.category}</span>
-                        <span>★ {product.rating}</span>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-[10px] text-[#4CAF50] font-bold uppercase tracking-wider">
+                        <span>{product.category.replace('-', ' ')}</span>
+                        <span className="bg-[#E8F5E9] px-2 py-0.5 rounded-full text-[#1B5E20]">★ {product.rating}</span>
                       </div>
-                      <h3 className="font-serif text-base text-forest line-clamp-1">
+                      <h3 className="font-serif text-lg font-semibold text-[#1A1A1A] line-clamp-1 group-hover:text-[#2E7D32] transition-colors">
                         {product.name}
                       </h3>
-                      <p className="text-xs text-charcoal/70 line-clamp-2 leading-relaxed font-alt">
+                      <p className="text-sm text-[#6B7280] line-clamp-2 leading-relaxed">
                         {product.desc}
                       </p>
                     </div>
 
-                    <div className="flex justify-between items-center pt-2">
-                      <span className="text-sm font-bold text-forest">₹{product.price.toFixed(2)}</span>
+                    <div className="flex justify-between items-center pt-3 border-t border-stone-100 mt-auto">
+                      <span className="text-xl font-bold text-[#1B5E20]">₹{product.price.toFixed(2)}</span>
                       
                       <button
                         onClick={() => addItem({
@@ -324,10 +366,11 @@ function ShopContent() {
                           sku: product.sku,
                           image: product.image
                         })}
-                        className="bg-forest hover:bg-moss text-warm-white p-2 rounded-full transition-colors duration-200"
+                        className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white px-4 py-2.5 rounded-full font-medium text-sm transition-all hover:shadow-md flex items-center gap-2"
                         aria-label="Add to Cart"
                       >
                         <ShoppingBag className="h-4 w-4" />
+                        <span className="hidden sm:inline">Add</span>
                       </button>
                     </div>
                   </div>
