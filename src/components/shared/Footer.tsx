@@ -71,6 +71,7 @@ export default function Footer() {
           <div>
             <h4 className="font-serif !text-white text-base font-bold mb-5">Customer Support</h4>
             <ul className="space-y-3 text-[14px] text-gray-400 font-medium">
+              <li><Link href="/about" className="hover:text-[#4CAF50] transition-colors">Our Story</Link></li>
               <li><Link href="/contact" className="hover:text-[#4CAF50] transition-colors">Contact Us</Link></li>
               <li><Link href="/faq" className="hover:text-[#4CAF50] transition-colors">Frequently Asked Questions</Link></li>
               <li><Link href="/sustainability" className="hover:text-[#4CAF50] transition-colors">Sustainability Mission</Link></li>

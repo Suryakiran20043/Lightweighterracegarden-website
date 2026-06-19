@@ -2,133 +2,16 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Sprout, Filter, Heart, ShoppingBag, ArrowUpDown, ChevronDown } from 'lucide-react';
-import { useCartStore } from '@/lib/store/cart';
-import { useWishlistStore } from '@/lib/store/wishlist';
+import { ChevronDown, ChevronRight, Grid2X2, LayoutGrid, List } from 'lucide-react';
+import Link from 'next/link';
+import { products as catalog } from '@/lib/data/products';
+import ProductCard from '@/components/shop/ProductCard';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Product Catalog
-const catalog = [
-  {
-    id: 'var_seeds_1',
-    productId: 'prod_seeds_1',
-    name: 'Premium Cherry Tomato Seeds',
-    category: 'vegetables',
-    price: 99,
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=400&q=80',
-    sku: 'SEED-TOM-CHY',
-    desc: 'Easy-to-grow, high-yield sweet cherry tomato seeds. Ideal for lightweight grow bags on balconies.',
-  },
-  {
-    id: 'var_seeds_2',
-    productId: 'prod_seeds_2',
-    name: 'Organic Sweet Basil Seeds',
-    category: 'micro-seeds',
-    price: 79,
-    rating: 4.6,
-    image: 'https://images.unsplash.com/photo-1618386365622-78094157355e?auto=format&fit=crop&w=400&q=80',
-    sku: 'SEED-BSL-SWT',
-    desc: 'Highly aromatic leaves perfect for pestos and Italian cuisines. Quick sprouting.',
-  },
-  {
-    id: 'var_soil_1',
-    productId: 'prod_soil_1',
-    name: 'Lightweight Premium Potting Soil (5 kg)',
-    category: 'pots-planters',
-    price: 399,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=400&q=80',
-    sku: 'SOIL-LT-5KG',
-    desc: 'Enriched with organic compost, coco-peat, and perlite. Weighs 60% less than normal garden soil.',
-  },
-  {
-    id: 'var_soil_2',
-    productId: 'prod_soil_2',
-    name: 'Reusable Vertical Grow Bags (Set of 3)',
-    category: 'pots-planters',
-    price: 450,
-    rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=400&q=80',
-    sku: 'GROW-BAG-V3',
-    desc: 'Heavy-duty breathable fabric planters. Fits vertical slots perfectly to optimize space.',
-  },
-  {
-    id: 'var_grocery_1',
-    productId: 'prod_grocery_1',
-    name: 'Cold Pressed Yellow Mustard Oil (1L)',
-    category: 'spices-masalas',
-    price: 260,
-    rating: 4.8,
-    image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=400&q=80',
-    sku: 'OIL-MSTD-1L',
-    desc: 'Traditionally extracted using wooden Ghani. Retains natural antioxidants and strong flavor.',
-  },
-  {
-    id: 'var_grocery_2',
-    productId: 'prod_grocery_2',
-    name: 'Organic Wild Forest Honey (500g)',
-    category: 'sweet-snacks',
-    price: 380,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1587049352846-4a222e784d38?auto=format&fit=crop&w=400&q=80',
-    sku: 'HONEY-WLD-500',
-    desc: 'Raw and unfiltered honey sourced from tribal forests. A natural sweetener packed with minerals.',
-  },
-  {
-    id: 'var_care_1',
-    productId: 'prod_care_1',
-    name: 'Organic Amla Fruit Powder (200g)',
-    category: 'pickles-powder',
-    price: 320,
-    rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=400&q=80',
-    sku: 'HAIR-OIL-AB200',
-    desc: 'Pure wild amla fruit powder rich in Vitamin C. Ideal for internal wellness and hair health.',
-  },
-  {
-    id: 'var_care_2',
-    productId: 'prod_care_2',
-    name: 'Monsoon Protection Herbal Spray',
-    category: 'seasonal',
-    price: 190,
-    rating: 4.5,
-    image: 'https://images.unsplash.com/photo-1607006342465-b771dfec3298?auto=format&fit=crop&w=400&q=80',
-    sku: 'SOAP-NT-P2',
-    desc: 'All-natural seasonal protection spray made with essential oils to repel pests and insects.',
-  },
-  {
-    id: 'var_seeds_3',
-    productId: 'prod_seeds_3',
-    name: 'French Marigold Flower Seeds',
-    category: 'flower-seeds',
-    price: 69,
-    rating: 4.7,
-    image: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=400&q=80',
-    sku: 'SEED-MGD-FRN',
-    desc: 'Bright golden marigold seeds. Acts as a natural companion plant to deter garden pests.',
-  },
-  {
-    id: 'var_seeds_4',
-    productId: 'prod_seeds_4',
-    name: 'Sugar Baby Watermelon Seeds',
-    category: 'fruits-seeds',
-    price: 89,
-    rating: 4.4,
-    image: 'https://images.unsplash.com/photo-1589984662646-e7b2e4962f18?auto=format&fit=crop&w=400&q=80',
-    sku: 'SEED-WML-SGB',
-    desc: 'Sweet, juicy dwarf watermelon seeds suitable for raised bed containers on terraces.',
-  },
-  {
-    id: 'var_seeds_5',
-    productId: 'prod_seeds_5',
-    name: 'Organic Turmeric Seed Rhizomes',
-    category: 'roots-tubers',
-    price: 120,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&w=400&q=80',
-    sku: 'ROOT-TUM-ORG',
-    desc: 'Premium seed rhizomes for growing medicinal, high-curcumin turmeric at home.',
-  }
+const VEGETABLE_SUBCATEGORIES = [
+  'Tomato', 'Brinjal', 'Okra', 'Chilli', 'Cucumber', 'Bottle Gourd', 
+  'Ridge Gourd', 'Beans', 'Carrot', 'Beetroot', 'Spinach', 'Radish', 
+  'Pumpkin', 'Onion', 'Cabbage', 'Cauliflower'
 ];
 
 function ShopContent() {
@@ -139,16 +22,23 @@ function ShopContent() {
   const [filteredProducts, setFilteredProducts] = useState(catalog);
   const [sortBy, setSortBy] = useState('featured');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-  
-  const { addItem } = useCartStore();
-  const { toggleItem, isInWishlist } = useWishlistStore();
+  const [columns, setColumns] = useState(4); // Default 4 columns
+  const [activeSubCategory, setActiveSubCategory] = useState<string | null>(null);
 
   useEffect(() => {
     let result = [...catalog];
+    
+    // 1. Filter by Main Category
     if (activeCategory !== 'all') {
       result = result.filter((p) => p.category === activeCategory);
     }
 
+    // 2. Filter by Sub Category (Keyword match in name)
+    if (activeSubCategory) {
+      result = result.filter((p) => p.name.toLowerCase().includes(activeSubCategory.toLowerCase()));
+    }
+
+    // 3. Search Search Query
     const searchQuery = searchParams.get('search') || '';
     if (searchQuery) {
       result = result.filter((p) =>
@@ -157,6 +47,7 @@ function ShopContent() {
       );
     }
 
+    // 4. Sort
     if (sortBy === 'price-low') {
       result.sort((a, b) => a.price - b.price);
     } else if (sortBy === 'price-high') {
@@ -170,118 +61,129 @@ function ShopContent() {
     }
 
     setFilteredProducts(result);
-  }, [activeCategory, sortBy, searchParams]);
+  }, [activeCategory, activeSubCategory, sortBy, searchParams]);
 
-  const selectCategory = (category: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (category === 'all') {
-      params.delete('category');
-    } else {
-      params.set('category', category);
-    }
-    router.push(`/shop?${params.toString()}`);
+  // Reset subcategory when changing main category
+  useEffect(() => {
+    setActiveSubCategory(null);
+  }, [activeCategory]);
+
+  const getCategoryName = (slug: string) => {
+    if (slug === 'all') return 'All Products';
+    const categoryMap: Record<string, string> = {
+      'vegetables': 'Vegetable Seeds',
+      'flower-seeds': 'Flower Seeds',
+      'fruits-seeds': 'Fruit Seeds',
+      'microgreens': 'Microgreens',
+      'grocery': 'Grocery',
+      'pots-planters': 'Pots & Planters',
+      'roots-tubers': 'Roots & Tubers'
+    };
+    return categoryMap[slug] || 'Products';
   };
 
-  return (
-    <div className="min-h-screen bg-warm-white py-12 px-4 sm:px-6 lg:px-12 z-10 relative">
-      <div className="w-full space-y-8">
-        
-        {/* Title */}
-        <div className="space-y-3 pt-6 pb-4">
-          <h1 className="text-5xl md:text-6xl font-serif text-[#1B5E20] tracking-tight">Shop Collection</h1>
-          <p className="text-base text-[#6B7280] max-w-2xl">
-            Returning to nature through premium, conscious terrace gardening and organic living.
-          </p>
-        </div>
+  const ColumnIcon = ({ cols, active }: { cols: number, active: boolean }) => (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={`transition-colors ${active ? "text-[#1B5E20]" : "text-gray-400 hover:text-gray-600"}`}>
+      {Array.from({length: cols}).map((_, i) => (
+        <rect key={i} x={i * (20/cols)} y="2" width={(20/cols) - 2} height="16" rx="2" fill="currentColor" />
+      ))}
+    </svg>
+  );
 
-        {/* Selected Vegetables Premium Horizontal Section */}
-        {activeCategory === 'all' && (
-          <div className="w-full my-10 bg-[#F8FDF9] rounded-[30px] p-8 sm:p-12 border border-[#E8F5E9] shadow-sm">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 gap-4">
-              <div className="space-y-3 max-w-2xl">
-                <h2 className="text-3xl sm:text-4xl font-serif text-[#1B5E20]">Selected Vegetables</h2>
-                <p className="text-[#6B7280] text-base sm:text-lg">
-                  Handpicked vegetable seeds with high germination rates for your terrace garden.
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex overflow-x-auto gap-6 pb-6 snap-x snap-mandatory hide-scrollbar -mx-8 px-8 sm:mx-0 sm:px-0">
-              {catalog.filter(p => p.category === 'vegetables').map(product => (
-                <div key={`featured-${product.id}`} className="min-w-[280px] sm:min-w-[320px] bg-white rounded-[20px] p-4 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-500 group snap-start border border-stone-100 flex flex-col">
-                  <div className="relative rounded-[16px] overflow-hidden aspect-[4/3] mb-5">
-                    <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <button className="bg-white text-[#1A1A1A] font-medium text-sm px-6 py-2.5 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#2E7D32] hover:text-white">
-                        Quick View
-                      </button>
-                    </div>
-                  </div>
-                  <h3 className="font-serif text-lg font-bold text-[#1A1A1A] mb-1 group-hover:text-[#2E7D32] transition-colors">{product.name}</h3>
-                  <div className="flex items-center justify-between mt-auto pt-3 border-t border-stone-50">
-                    <span className="text-[#1B5E20] font-bold text-lg">₹{product.price}</span>
-                    <button 
-                      onClick={() => addItem({ id: product.id, productId: product.productId, name: product.name, price: product.price, sku: product.sku, image: product.image })}
-                      className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white px-5 py-2.5 rounded-full text-sm font-medium transition-all hover:shadow-md flex items-center gap-2"
-                    >
-                      <ShoppingBag className="w-4 h-4" />
-                      Add
-                    </button>
-                  </div>
-                </div>
+  return (
+    <div className="min-h-screen bg-white z-10 relative pb-16">
+      
+      {/* 1. Breadcrumb - Top */}
+      <div className="w-full bg-[#F9FAFB] py-4 border-b border-gray-100">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 text-[13px] text-gray-500" style={{ fontFamily: 'var(--font-sans)' }}>
+            <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
+            <ChevronRight className="w-3 h-3 text-gray-400" />
+            <span className="text-gray-800">{getCategoryName(activeCategory)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full px-4 sm:px-6 lg:px-8 pt-6">
+        
+        {/* 2. Title & Sub-filters */}
+        <div className="mb-4 text-center">
+          <h1 className="text-[28px] font-sans font-bold text-gray-800 mb-6 tracking-tight">{getCategoryName(activeCategory)}</h1>
+          
+          {/* Subcategory Pills (Only show if Vegetables) */}
+          {activeCategory === 'vegetables' && (
+            <div className="flex flex-wrap justify-center gap-2 max-w-5xl mx-auto">
+              <button 
+                onClick={() => setActiveSubCategory(null)}
+                className={`px-4 py-2 rounded-md border text-[13px] font-medium transition-colors ${!activeSubCategory ? 'bg-[#387635] text-white border-[#387635]' : 'bg-white text-[#4A4A4A] border-gray-200 hover:border-[#387635] hover:text-[#387635]'}`}
+                style={{ fontFamily: 'var(--font-sans)' }}
+              >
+                View All
+              </button>
+              {VEGETABLE_SUBCATEGORIES.map((sub) => (
+                <button
+                  key={sub}
+                  onClick={() => setActiveSubCategory(sub)}
+                  className={`px-4 py-2 rounded-md border text-[13px] font-medium transition-colors ${activeSubCategory === sub ? 'bg-[#387635] text-white border-[#387635]' : 'bg-white text-[#4A4A4A] border-gray-200 hover:border-[#387635] hover:text-[#387635]'}`}
+                  style={{ fontFamily: 'var(--font-sans)' }}
+                >
+                  {sub}
+                </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Filters and Controls */}
-        <div className="flex flex-col xl:flex-row gap-6 justify-between items-start xl:items-center border-b border-stone-200 pb-8 pt-4">
-          {/* Categories Filter tab buttons */}
-          <div className="flex flex-wrap gap-3">
-            {[
-              { id: 'all', name: 'All Products', icon: '✨' },
-              { id: 'vegetables', name: 'Vegetables', icon: '🌱' },
-              { id: 'micro-seeds', name: 'Micro Seeds', icon: '🌿' },
-              { id: 'flower-seeds', name: 'Flower Seeds', icon: '🌸' },
-              { id: 'fruits-seeds', name: 'Fruit Seeds', icon: '🍎' },
-              { id: 'roots-tubers', name: 'Roots & Tubers', icon: '🥔' },
-              { id: 'pickles-powder', name: 'Pickles & Powders', icon: '🥒' },
-              { id: 'sweet-snacks', name: 'Sweets & Snacks', icon: '🍬' },
-              { id: 'seasonal', name: 'Seasonal Collection', icon: '☀️' },
-              { id: 'pots-planters', name: 'Pots & Planters', icon: '🪴' },
-              { id: 'spices-masalas', name: 'Spices & Masalas', icon: '🌶️' },
-            ].map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => selectCategory(cat.id)}
-                className={`flex items-center gap-2 px-5 h-[44px] text-[13px] font-medium rounded-full border transition-all duration-300 ${
-                  activeCategory === cat.id
-                    ? 'bg-[#4CAF50] border-[#4CAF50] text-white shadow-[0_4px_12px_rgba(76,175,80,0.3)]'
-                    : 'bg-white border-stone-200 text-[#6B7280] hover:border-[#4CAF50] hover:text-[#4CAF50] hover:-translate-y-0.5 hover:shadow-sm'
-                }`}
+        {/* 3. View Switch & Sort Row */}
+        <div className="grid grid-cols-2 md:grid-cols-3 items-center py-3 border-b border-gray-100 mb-5 relative z-20">
+          
+          {/* View Switcher (Left side) */}
+          <div className="flex items-center gap-4 justify-start">
+            <span className="text-[13px] font-medium text-gray-600 hidden xl:inline" style={{ fontFamily: 'var(--font-sans)' }}>View As:</span>
+            <div className="flex items-center gap-1.5">
+              {[2, 3, 4].map(num => (
+                <button 
+                  key={num} 
+                  onClick={() => setColumns(num)} 
+                  className={`w-[34px] h-[34px] rounded-md border flex items-center justify-center transition-colors ${columns === num ? 'border-[#387635] text-[#387635] bg-white' : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`} 
+                  title={`${num} Columns`}
+                >
+                  <ColumnIcon cols={num} active={columns === num} />
+                </button>
+              ))}
+              {/* Optional List Icon to match screenshot perfectly */}
+              <button 
+                onClick={() => setColumns(1)} 
+                className={`w-[34px] h-[34px] rounded-md border flex items-center justify-center transition-colors ${columns === 1 ? 'border-[#387635] text-[#387635] bg-white' : 'border-gray-200 text-gray-400 bg-white hover:border-gray-300'}`} 
+                title="List View"
               >
-                <span className="text-base">{cat.icon}</span>
-                <span>{cat.name}</span>
+                <List className="w-[18px] h-[18px]" />
               </button>
-            ))}
+            </div>
           </div>
 
-          {/* Sorting controls */}
-          <div className="relative z-20">
+          {/* Center (Showing Products) */}
+          <div className="hidden md:flex justify-center">
+            <span className="text-[13px] font-medium text-gray-500" style={{ fontFamily: 'var(--font-sans)' }}>
+              Showing {filteredProducts.length} Products
+            </span>
+          </div>
+
+          {/* Sort Dropdown (Right side) */}
+          <div className="relative flex justify-end">
             <button
               onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-              className="flex items-center justify-between w-48 bg-white border border-forest text-forest text-sm font-medium px-4 py-2.5 rounded-md focus:outline-none hover:bg-stone/5 transition-colors"
+              className="flex items-center justify-between w-48 bg-white border border-gray-200 text-gray-700 text-sm font-bold px-4 py-2.5 rounded-lg focus:outline-none hover:border-gray-300 transition-colors"
+              style={{ fontFamily: 'var(--font-sans)' }}
             >
-              <span>Sort by</span>
+              <span>Sort by: {sortBy === 'featured' ? 'Featured' : sortBy.includes('price') ? 'Price' : sortBy.includes('alpha') ? 'Alphabetically' : 'Best Selling'}</span>
               <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${sortDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {sortDropdownOpen && (
-              <div className="absolute right-0 sm:left-0 top-full mt-1 w-56 bg-white border border-stone/30 rounded-md shadow-lg py-2">
+              <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] py-2 overflow-hidden">
                 {[
                   { value: 'featured', label: 'Featured' },
-                  { value: 'relevant', label: 'Most relevant' },
                   { value: 'best-selling', label: 'Best selling' },
                   { value: 'alpha-asc', label: 'Alphabetically, A-Z' },
                   { value: 'alpha-desc', label: 'Alphabetically, Z-A' },
@@ -294,14 +196,13 @@ function ShopContent() {
                       setSortBy(option.value);
                       setSortDropdownOpen(false);
                     }}
-                    className="w-full text-left px-5 py-2 text-sm text-charcoal hover:bg-stone/10 transition-colors flex items-center"
+                    className={`w-full text-left px-5 py-2.5 text-sm transition-colors flex items-center ${sortBy === option.value ? 'bg-gray-50 text-[#1B5E20] font-bold' : 'text-gray-600 hover:bg-gray-50'}`}
+                    style={{ fontFamily: 'var(--font-sans)' }}
                   >
-                    <span className="w-5 inline-block text-stone-400">
-                      {sortBy === option.value ? '—' : ''}
+                    <span className="w-5 inline-block">
+                      {sortBy === option.value ? '✓' : ''}
                     </span>
-                    <span className={sortBy === option.value ? 'font-medium' : ''}>
-                      {option.label}
-                    </span>
+                    {option.label}
                   </button>
                 ))}
               </div>
@@ -309,77 +210,51 @@ function ShopContent() {
           </div>
         </div>
 
-        {/* Product Grid */}
-        {filteredProducts.length === 0 ? (
-          <p className="text-center text-sm text-stone-500 py-12">No products found in this category.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {filteredProducts.map((product) => {
-              const inWish = isInWishlist(product.id);
-              return (
-                <div
+        {/* 4. Product Grid */}
+        <div className="relative min-h-[400px]">
+          {filteredProducts.length === 0 ? (
+            <div className="flex items-center justify-center py-24">
+              <p className="text-lg text-stone-500 font-serif">No products found for this selection.</p>
+            </div>
+          ) : (
+            <motion.div 
+              key={`${activeCategory}-${activeSubCategory}-${sortBy}`}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { 
+                  opacity: 1,
+                  transition: { staggerChildren: 0.04 }
+                }
+              }}
+              className={`grid gap-4 md:gap-5 lg:gap-6 justify-center ${
+                columns === 1 ? 'grid-cols-1 max-w-3xl mx-auto' :
+                columns === 2 ? 'grid-cols-2 lg:grid-cols-2' : 
+                columns === 3 ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-3' : 
+                'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4'
+              }`}
+            >
+              {filteredProducts.map((product) => (
+                <motion.div
                   key={product.id}
-                  className="bg-white border border-stone-200 rounded-[20px] overflow-hidden shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:-translate-y-2 transition-all duration-500 flex flex-col justify-between group"
+                  layout
+                  transition={{ duration: 0.45, ease: "easeInOut" }}
+                  variants={{
+                    hidden: { opacity: 0, y: 20 },
+                    visible: { 
+                      opacity: 1, 
+                      y: 0, 
+                      transition: { duration: 0.45, ease: "easeInOut" } 
+                    }
+                  }}
                 >
-                  <div className="relative overflow-hidden aspect-[4/3] sm:aspect-square">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-                    
-                    {/* Wishlist toggle */}
-                    <button
-                      onClick={() => toggleItem({ id: product.id, name: product.name, price: product.price, image: product.image })}
-                      className={`absolute top-4 right-4 p-2.5 rounded-full shadow-md backdrop-blur-sm transition-colors duration-300 z-10 ${
-                        inWish ? 'bg-[#ff6b6b]/90 text-white' : 'bg-white/80 hover:bg-white text-[#6B7280] hover:text-[#ff6b6b]'
-                      }`}
-                      aria-label="Toggle Wishlist"
-                    >
-                      <Heart className="h-4 w-4 fill-current" />
-                    </button>
-                  </div>
-
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center text-[10px] text-[#4CAF50] font-bold uppercase tracking-wider">
-                        <span>{product.category.replace('-', ' ')}</span>
-                        <span className="bg-[#E8F5E9] px-2 py-0.5 rounded-full text-[#1B5E20]">★ {product.rating}</span>
-                      </div>
-                      <h3 className="font-serif text-lg font-semibold text-[#1A1A1A] line-clamp-1 group-hover:text-[#2E7D32] transition-colors">
-                        {product.name}
-                      </h3>
-                      <p className="text-sm text-[#6B7280] line-clamp-2 leading-relaxed">
-                        {product.desc}
-                      </p>
-                    </div>
-
-                    <div className="flex justify-between items-center pt-3 border-t border-stone-100 mt-auto">
-                      <span className="text-xl font-bold text-[#1B5E20]">₹{product.price.toFixed(2)}</span>
-                      
-                      <button
-                        onClick={() => addItem({
-                          id: product.id,
-                          productId: product.productId,
-                          name: product.name,
-                          price: product.price,
-                          sku: product.sku,
-                          image: product.image
-                        })}
-                        className="bg-[#2E7D32] hover:bg-[#1B5E20] text-white px-4 py-2.5 rounded-full font-medium text-sm transition-all hover:shadow-md flex items-center gap-2"
-                        aria-label="Add to Cart"
-                      >
-                        <ShoppingBag className="h-4 w-4" />
-                        <span className="hidden sm:inline">Add</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
+                  <ProductCard product={product} />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -387,7 +262,7 @@ function ShopContent() {
 
 export default function ShopPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-serif text-lg text-forest bg-warm-white">Loading Collection...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-serif text-lg text-[#2E7D32] bg-white">Loading Collection...</div>}>
       <ShopContent />
     </Suspense>
   );

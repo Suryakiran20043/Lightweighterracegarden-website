@@ -7,6 +7,7 @@ import { ShoppingBag, User, Menu, Search, Sprout, Heart, Leaf, Phone } from 'luc
 import { useCartStore } from '@/lib/store/cart';
 import { useWishlistStore } from '@/lib/store/wishlist';
 import AnimatedSearchPlaceholder from './AnimatedSearchPlaceholder';
+import { motion } from 'framer-motion';
 
 interface NavbarProps {
   onCartOpen: () => void;
@@ -50,6 +51,7 @@ function NavbarContent({ onCartOpen, onSearchOpen }: NavbarProps) {
 
   const navLinks = [
     { name: 'Home', href: '/' },
+    { name: 'Our Story', href: '/about' },
     { name: 'Vegetable Seeds', href: '/shop?category=vegetables' },
     { name: 'Flower Seeds', href: '/shop?category=flower-seeds' },
     { name: 'Fruit Seeds', href: '/shop?category=fruits-seeds' },
@@ -163,7 +165,7 @@ function NavbarContent({ onCartOpen, onSearchOpen }: NavbarProps) {
       </div>
 
       {/* 2. Main Header */}
-      <div className="w-full bg-white px-4 sm:px-6 lg:px-12 py-5">
+      <div className="w-full bg-white px-4 sm:px-6 lg:px-12 pt-5 pb-3">
         <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           
           {/* Left: Logo & "Browse All Categories" button */}
@@ -226,7 +228,7 @@ function NavbarContent({ onCartOpen, onSearchOpen }: NavbarProps) {
           {/* Right: Actions */}
           <div className="flex shrink-0 items-center gap-6 sm:gap-8">
             <Link
-              href="/dashboard"
+              href="/account"
               className="flex flex-col items-center justify-center text-[#333] hover:text-[#2E7D32] transition-colors group"
             >
               <User className="h-7 w-7 mb-1 group-hover:scale-110 transition-transform" strokeWidth={1.5} />
@@ -234,7 +236,7 @@ function NavbarContent({ onCartOpen, onSearchOpen }: NavbarProps) {
             </Link>
 
             <Link
-              href="/dashboard/wishlist"
+              href="/wishlist"
               className="flex flex-col items-center justify-center text-[#333] hover:text-[#2E7D32] transition-colors group relative"
             >
               <div className="relative">
@@ -267,7 +269,7 @@ function NavbarContent({ onCartOpen, onSearchOpen }: NavbarProps) {
       {/* 3. Category Bar */}
       <div className="hidden md:block bg-white border-b border-[#EAEAEA]">
         <div className="max-w-screen-2xl mx-auto px-4 lg:px-8">
-          <div className="flex justify-center items-center flex-nowrap whitespace-nowrap overflow-x-auto hide-scrollbar gap-x-5 lg:gap-x-7 py-3">
+          <div className="flex justify-between items-center w-full pt-2 pb-3 overflow-x-auto scrollbar-hide">
             {navLinks.map((link) => {
               let isActive = false;
               if (link.href === '/') {
@@ -280,10 +282,17 @@ function NavbarContent({ onCartOpen, onSearchOpen }: NavbarProps) {
               }
               
               return (
-                <div key={link.name} className="relative group py-1 px-1">
+                <div key={link.name} className="relative group py-1.5 px-3 shrink-0 rounded-full z-0">
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeCategoryPill"
+                      className="absolute inset-0 bg-[#E8F5E9] rounded-full -z-10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
                   <Link
                     href={link.href}
-                    className={`block text-[12px] lg:text-[13px] tracking-[1px] uppercase transition-all duration-300 ${
+                    className={`block text-[11px] lg:text-[12px] tracking-[1px] uppercase transition-all duration-300 ${
                       isActive 
                         ? 'text-[#2E7D32] font-bold' 
                         : 'text-[#333333] hover:text-[#2E7D32] font-bold hover:-translate-y-[2px]'
@@ -291,11 +300,6 @@ function NavbarContent({ onCartOpen, onSearchOpen }: NavbarProps) {
                   >
                     {link.name}
                   </Link>
-
-                  {/* Animated underline */}
-                  <span className={`absolute bottom-0 left-1/2 h-[2px] bg-[#2E7D32] transition-all duration-300 -translate-x-1/2 ${
-                    isActive ? 'w-full' : 'w-0 group-hover:w-full'
-                  }`} />
                 </div>
               );
             })}

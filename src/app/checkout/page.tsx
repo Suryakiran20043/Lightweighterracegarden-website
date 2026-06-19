@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/store/cart';
-import { ShieldCheck, CreditCard, ChevronRight, Lock, MapPin, Truck, HelpCircle, ArrowRight } from 'lucide-react';
+import { ShieldCheck, CreditCard, ChevronRight, Lock, MapPin, Truck, ChevronDown, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -15,23 +16,26 @@ export default function CheckoutPage() {
   // Wizard state
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     address: '',
+    apartment: '',
     city: '',
     state: '',
     pincode: '',
-    paymentMethod: 'razorpay',
+    paymentMethod: 'upi',
   });
   const [isProcessing, setIsProcessing] = useState(false);
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-warm-white flex flex-col items-center justify-center font-serif text-forest p-4">
-        <h2 className="text-2xl mb-4">Your Cart is Empty</h2>
-        <button onClick={() => router.push('/shop')} className="bg-forest text-warm-white px-6 py-2 rounded-md font-sans text-sm">
-          Browse Shop
+      <div className="min-h-screen bg-[#F8F8F8] flex flex-col items-center justify-center font-serif text-[#1B5E20] p-4">
+        <h2 className="text-3xl font-bold mb-4">Your Cart is Empty</h2>
+        <p className="text-gray-500 font-sans mb-8">Add items to your cart to checkout.</p>
+        <button onClick={() => router.push('/shop')} className="bg-[#1B5E20] text-white px-8 py-3 rounded-xl font-sans text-sm font-bold shadow-md hover:bg-[#2E7D32]">
+          Continue Shopping
         </button>
       </div>
     );
@@ -47,274 +51,349 @@ export default function CheckoutPage() {
     if (step < 3) {
       setStep(step + 1);
     } else {
-      // Place Order
       handlePlaceOrder();
     }
   };
 
   const handlePlaceOrder = async () => {
     setIsProcessing(true);
-    // Simulate API request to Server Action/Route Handler to create order, send email confirmation and update inventory
     await new Promise((resolve) => setTimeout(resolve, 2000));
     
-    // Generate a random order ID
     const orderId = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
-    
     clearCart();
     setIsProcessing(false);
     
     router.push(`/checkout/success?orderId=${orderId}&email=${encodeURIComponent(formData.email)}&total=${total}`);
   };
 
+  // Modern Floating Label Input Component
+  const InputField = ({ label, name, type = 'text', required = false, className = '' }: any) => (
+    <div className={`relative ${className}`}>
+      <input
+        type={type}
+        name={name}
+        id={name}
+        required={required}
+        value={formData[name as keyof typeof formData]}
+        onChange={handleInputChange}
+        placeholder=" "
+        className="block px-4 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-0 focus:border-[#4CAF50] peer"
+        style={{ fontFamily: 'var(--font-sans)' }}
+      />
+      <label
+        htmlFor={name}
+        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-5 z-10 origin-[0] left-4 peer-focus:text-[#4CAF50] peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-4"
+        style={{ fontFamily: 'var(--font-sans)' }}
+      >
+        {label} {required && '*'}
+      </label>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-warm-white py-16 px-4 sm:px-6 lg:px-12 z-10 relative font-alt">
-      <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="min-h-screen bg-white">
+      {/* Ultra-minimal header just for checkout */}
+      <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex justify-center lg:justify-start">
+          <Link href="/" className="font-serif text-2xl font-bold text-[#1B5E20] tracking-tight">
+            Light Weight<br/><span className="text-xs tracking-[0.2em] uppercase text-[#4CAF50] font-sans">Terrace Garden</span>
+          </Link>
+        </div>
+      </header>
+
+      <div className="max-w-7xl mx-auto flex flex-col-reverse lg:flex-row min-h-[calc(100vh-80px)]">
         
-        {/* Left - Checkout Wizard (2 columns) */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Left Side: Checkout Flow */}
+        <div className="w-full lg:w-[55%] xl:w-[60%] lg:pr-12 xl:pr-16 pt-10 pb-20 px-4 sm:px-6 lg:px-8">
           
-          {/* Progress Indicators */}
-          <div className="flex items-center gap-2 text-xs font-semibold text-charcoal/60 bg-white border border-stone/30 p-4 rounded-xl">
-            <span className={step === 1 ? 'text-forest font-bold' : ''}>1. Shipping Address</span>
-            <ChevronRight className="h-4 w-4" />
-            <span className={step === 2 ? 'text-forest font-bold' : ''}>2. Logistics Carrier</span>
-            <ChevronRight className="h-4 w-4" />
-            <span className={step === 3 ? 'text-forest font-bold' : ''}>3. Secure Payment</span>
-          </div>
+          {/* Breadcrumb / Progress */}
+          <nav className="flex items-center gap-2 text-xs font-bold text-gray-400 mb-10 uppercase tracking-wider" style={{ fontFamily: 'var(--font-sans)' }}>
+            <Link href="/cart" className="hover:text-gray-900 transition-colors">Cart</Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className={step === 1 ? 'text-gray-900' : (step > 1 ? 'text-[#1B5E20] cursor-pointer' : '')} onClick={() => step > 1 && setStep(1)}>Information</span>
+            <ChevronRight className="w-3 h-3" />
+            <span className={step === 2 ? 'text-gray-900' : (step > 2 ? 'text-[#1B5E20] cursor-pointer' : '')} onClick={() => step > 2 && setStep(2)}>Shipping</span>
+            <ChevronRight className="w-3 h-3" />
+            <span className={step === 3 ? 'text-gray-900' : ''}>Payment</span>
+          </nav>
 
-          <div className="bg-white border border-stone/30 rounded-xl p-6 sm:p-8 shadow-2xs">
-            <form onSubmit={handleNextStep} className="space-y-6">
-              
-              {/* Step 1 - Shipping Address */}
-              {step === 1 && (
-                <div className="space-y-4">
-                  <h3 className="font-serif text-lg text-forest flex items-center gap-2"><MapPin className="h-5 w-5" /> Shipping Address Details</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-charcoal">Full Name</label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={formData.name}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-stone/30 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-forest"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-charcoal">Email Address</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-stone/30 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-forest"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-charcoal">Mobile Number</label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-stone/30 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-forest"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-charcoal">Shipping Pincode</label>
-                      <input
-                        type="text"
-                        name="pincode"
-                        maxLength={6}
-                        value={formData.pincode}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-stone/30 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-forest"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-charcoal">Street Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-stone/30 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-forest"
-                      required
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-charcoal">City</label>
-                      <input
-                        type="text"
-                        name="city"
-                        value={formData.city}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-stone/30 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-forest"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs font-semibold text-charcoal">State</label>
-                      <input
-                        type="text"
-                        name="state"
-                        value={formData.state}
-                        onChange={handleInputChange}
-                        className="w-full bg-white border border-stone/30 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-forest"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2 - Logistics Carrier selection (Shiprocket integration serviceability details) */}
-              {step === 2 && (
-                <div className="space-y-4">
-                  <h3 className="font-serif text-lg text-forest flex items-center gap-2"><Truck className="h-5 w-5" /> Choose Logistics Provider</h3>
-                  <p className="text-xs text-charcoal/80">Real-time shipping serviceability rates based on pincode: <strong>{formData.pincode}</strong></p>
-                  
-                  <div className="space-y-3">
-                    <label className="flex items-center justify-between p-4 border border-forest rounded-lg bg-forest/5 cursor-pointer text-xs">
-                      <div className="flex items-center gap-3">
-                        <input type="radio" defaultChecked className="text-forest focus:ring-forest" />
-                        <div>
-                          <p className="font-bold text-forest">Shiprocket Express Ground</p>
-                          <p className="text-stone-500">Delivered within 3-5 business days</p>
-                        </div>
-                      </div>
-                      <span className="font-bold text-forest">{subtotal >= 999 ? 'FREE' : '₹60.00'}</span>
-                    </label>
-
-                    <label className="flex items-center justify-between p-4 border border-stone/30 rounded-lg opacity-60 cursor-not-allowed text-xs">
-                      <div className="flex items-center gap-3">
-                        <input type="radio" disabled className="text-forest focus:ring-forest" />
-                        <div>
-                          <p className="font-bold text-charcoal">Premium Air Express</p>
-                          <p className="text-stone-500">Next-day delivery (Unserviceable for current pincode)</p>
-                        </div>
-                      </div>
-                      <span className="font-bold text-charcoal">₹150.00</span>
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3 - Secured Payments */}
-              {step === 3 && (
-                <div className="space-y-4">
-                  <h3 className="font-serif text-lg text-forest flex items-center gap-2"><CreditCard className="h-5 w-5" /> Select Secure Payment Gateway</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    {[
-                      { id: 'razorpay', name: 'Razorpay UPI/Cards' },
-                      { id: 'stripe', name: 'Stripe Credit Card' },
-                      { id: 'cod', name: 'Cash on Delivery (COD)' },
-                    ].map((method) => (
-                      <label
-                        key={method.id}
-                        className={`flex flex-col items-center justify-center p-4 border rounded-xl cursor-pointer text-center text-xs font-semibold ${
-                          formData.paymentMethod === method.id
-                            ? 'border-forest bg-forest/5 text-forest'
-                            : 'border-stone/30 hover:border-forest text-charcoal'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="paymentMethod"
-                          value={method.id}
-                          checked={formData.paymentMethod === method.id}
-                          onChange={handleInputChange}
-                          className="sr-only"
-                        />
-                        <span>{method.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Form Navigation Buttons */}
-              <div className="flex justify-between items-center pt-6 border-t border-stone/20">
-                {step > 1 ? (
-                  <button
-                    type="button"
-                    onClick={() => setStep(step - 1)}
-                    className="text-xs font-bold text-stone-500 hover:text-charcoal transition-colors"
-                  >
-                    Back
-                  </button>
-                ) : (
-                  <div />
-                )}
-                
-                <button
-                  type="submit"
-                  disabled={isProcessing}
-                  className="flex items-center gap-1.5 bg-forest hover:bg-moss text-warm-white px-6 py-2.5 rounded-md text-xs font-semibold transition-all duration-200 disabled:opacity-50"
-                >
-                  {isProcessing ? 'Processing Transaction...' : step === 3 ? 'Place Secure Order' : 'Continue'}
-                  <ArrowRight className="h-4 w-4" />
+          {/* Express Checkout */}
+          {step === 1 && (
+            <div className="mb-10">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <span className="text-xs text-gray-500 font-medium" style={{ fontFamily: 'var(--font-sans)' }}>Express Checkout</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <button className="bg-[#5A31F4] hover:bg-[#4825C9] text-white py-3 rounded-lg flex items-center justify-center transition-colors shadow-sm">
+                  <span className="font-bold tracking-wider" style={{ fontFamily: 'var(--font-sans)' }}>ShopPay</span>
+                </button>
+                <button className="bg-black hover:bg-gray-800 text-white py-3 rounded-lg flex items-center justify-center transition-colors shadow-sm">
+                  <span className="font-bold tracking-wider" style={{ fontFamily: 'var(--font-sans)' }}>GPay</span>
                 </button>
               </div>
+              <div className="flex items-center justify-center gap-4 mt-6">
+                <div className="h-px bg-gray-200 flex-1"></div>
+                <span className="text-xs text-gray-500 font-medium" style={{ fontFamily: 'var(--font-sans)' }}>OR CONTINUE BELOW</span>
+                <div className="h-px bg-gray-200 flex-1"></div>
+              </div>
+            </div>
+          )}
 
-            </form>
-          </div>
+          <form onSubmit={handleNextStep}>
+            
+            {/* Step 1: Contact & Shipping */}
+            <div className={`transition-all duration-300 ${step !== 1 ? 'hidden' : 'block'}`}>
+              <div className="mb-8">
+                <h2 className="text-xl font-serif font-bold text-gray-900 mb-4">Contact Information</h2>
+                <InputField label="Email or mobile phone number" name="email" type="email" required />
+              </div>
+
+              <div>
+                <h2 className="text-xl font-serif font-bold text-gray-900 mb-4">Shipping Address</h2>
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <InputField label="First name" name="firstName" required />
+                  <InputField label="Last name" name="lastName" required />
+                </div>
+                <InputField label="Address" name="address" required className="mb-3" />
+                <InputField label="Apartment, suite, etc. (optional)" name="apartment" className="mb-3" />
+                <div className="grid grid-cols-3 gap-3 mb-3">
+                  <InputField label="City" name="city" required className="col-span-1" />
+                  <div className="relative col-span-1">
+                    <select
+                      name="state"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      required
+                      className="block px-4 pb-2.5 pt-6 w-full text-sm text-gray-900 bg-white border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-0 focus:border-[#4CAF50] peer"
+                      style={{ fontFamily: 'var(--font-sans)' }}
+                    >
+                      <option value="">State</option>
+                      <option value="AP">Andhra Pradesh</option>
+                      <option value="KA">Karnataka</option>
+                      <option value="TN">Tamil Nadu</option>
+                      <option value="MH">Maharashtra</option>
+                      <option value="DL">Delhi</option>
+                    </select>
+                    <label className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-5 z-10 origin-[0] left-4" style={{ fontFamily: 'var(--font-sans)' }}>State/Territory *</label>
+                  </div>
+                  <InputField label="PIN code" name="pincode" required className="col-span-1" />
+                </div>
+                <InputField label="Phone" name="phone" required type="tel" />
+              </div>
+
+              <div className="mt-8 flex justify-end">
+                <button type="submit" className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white px-8 py-4 rounded-lg font-bold text-sm transition-colors shadow-md w-full sm:w-auto" style={{ fontFamily: 'var(--font-sans)' }}>
+                  Continue to shipping
+                </button>
+              </div>
+            </div>
+
+            {/* Step 2: Shipping Method */}
+            <div className={`transition-all duration-300 ${step !== 2 ? 'hidden' : 'block'}`}>
+              
+              {/* Summary of Step 1 */}
+              <div className="border border-gray-200 rounded-lg p-4 mb-8 text-sm" style={{ fontFamily: 'var(--font-sans)' }}>
+                <div className="flex justify-between border-b border-gray-200 pb-3 mb-3">
+                  <div className="flex gap-6">
+                    <span className="text-gray-500 w-16">Contact</span>
+                    <span className="text-gray-900">{formData.email}</span>
+                  </div>
+                  <button type="button" onClick={() => setStep(1)} className="text-[#1B5E20] text-xs hover:underline">Change</button>
+                </div>
+                <div className="flex justify-between">
+                  <div className="flex gap-6">
+                    <span className="text-gray-500 w-16">Ship to</span>
+                    <span className="text-gray-900">{formData.address}, {formData.city}, {formData.state} {formData.pincode}</span>
+                  </div>
+                  <button type="button" onClick={() => setStep(1)} className="text-[#1B5E20] text-xs hover:underline">Change</button>
+                </div>
+              </div>
+
+              <h2 className="text-xl font-serif font-bold text-gray-900 mb-4">Shipping Method</h2>
+              
+              <div className="border border-[#4CAF50] bg-[#F8FDF9] rounded-lg p-4 flex items-center justify-between cursor-pointer shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-4 h-4 rounded-full border-[5px] border-[#1B5E20]"></div>
+                  <span className="text-gray-900 font-medium" style={{ fontFamily: 'var(--font-sans)' }}>Standard Shipping (3-5 Business Days)</span>
+                </div>
+                <span className="font-bold text-gray-900" style={{ fontFamily: 'var(--font-sans)' }}>Free</span>
+              </div>
+
+              <div className="mt-8 flex justify-between items-center">
+                <button type="button" onClick={() => setStep(1)} className="text-[#1B5E20] text-sm hover:underline" style={{ fontFamily: 'var(--font-sans)' }}>
+                  <ChevronRight className="w-4 h-4 inline rotate-180" /> Return to information
+                </button>
+                <button type="submit" className="bg-[#1B5E20] hover:bg-[#2E7D32] text-white px-8 py-4 rounded-lg font-bold text-sm transition-colors shadow-md" style={{ fontFamily: 'var(--font-sans)' }}>
+                  Continue to payment
+                </button>
+              </div>
+            </div>
+
+            {/* Step 3: Payment */}
+            <div className={`transition-all duration-300 ${step !== 3 ? 'hidden' : 'block'}`}>
+              
+              <div className="border border-gray-200 rounded-lg p-4 mb-8 text-sm" style={{ fontFamily: 'var(--font-sans)' }}>
+                <div className="flex justify-between border-b border-gray-200 pb-3 mb-3">
+                  <div className="flex gap-6">
+                    <span className="text-gray-500 w-16">Contact</span>
+                    <span className="text-gray-900">{formData.email}</span>
+                  </div>
+                  <button type="button" onClick={() => setStep(1)} className="text-[#1B5E20] text-xs hover:underline">Change</button>
+                </div>
+                <div className="flex justify-between border-b border-gray-200 pb-3 mb-3">
+                  <div className="flex gap-6">
+                    <span className="text-gray-500 w-16">Ship to</span>
+                    <span className="text-gray-900">{formData.address}, {formData.city}, {formData.state} {formData.pincode}</span>
+                  </div>
+                  <button type="button" onClick={() => setStep(1)} className="text-[#1B5E20] text-xs hover:underline">Change</button>
+                </div>
+                <div className="flex justify-between">
+                  <div className="flex gap-6">
+                    <span className="text-gray-500 w-16">Method</span>
+                    <span className="text-gray-900">Standard Shipping · <b>Free</b></span>
+                  </div>
+                </div>
+              </div>
+
+              <h2 className="text-xl font-serif font-bold text-gray-900 mb-2">Payment</h2>
+              <p className="text-sm text-gray-500 mb-4" style={{ fontFamily: 'var(--font-sans)' }}>All transactions are secure and encrypted.</p>
+              
+              <div className="border border-gray-200 rounded-lg overflow-hidden bg-white mb-8" style={{ fontFamily: 'var(--font-sans)' }}>
+                {/* UPI Option */}
+                <label className={`flex flex-col border-b border-gray-200 cursor-pointer ${formData.paymentMethod === 'upi' ? 'bg-[#F8FDF9] border-[#4CAF50]' : ''}`}>
+                  <div className="flex items-center gap-3 p-4">
+                    <input type="radio" name="paymentMethod" value="upi" checked={formData.paymentMethod === 'upi'} onChange={handleInputChange} className="w-4 h-4 text-[#1B5E20] focus:ring-[#4CAF50]" />
+                    <span className="font-medium text-gray-900">UPI (GPay, PhonePe, Paytm)</span>
+                  </div>
+                  {formData.paymentMethod === 'upi' && (
+                    <div className="px-11 pb-4 text-sm text-gray-500">
+                      You will be redirected to securely complete your purchase using your preferred UPI app.
+                    </div>
+                  )}
+                </label>
+
+                {/* Card Option */}
+                <label className={`flex flex-col border-b border-gray-200 cursor-pointer ${formData.paymentMethod === 'card' ? 'bg-[#F8FDF9] border-[#4CAF50]' : ''}`}>
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3">
+                      <input type="radio" name="paymentMethod" value="card" checked={formData.paymentMethod === 'card'} onChange={handleInputChange} className="w-4 h-4 text-[#1B5E20] focus:ring-[#4CAF50]" />
+                      <span className="font-medium text-gray-900">Credit / Debit Card</span>
+                    </div>
+                    <CreditCard className="w-5 h-5 text-gray-400" />
+                  </div>
+                  {formData.paymentMethod === 'card' && (
+                    <div className="px-11 pb-4 space-y-3">
+                      <input type="text" placeholder="Card number" className="w-full border border-gray-300 rounded p-2.5 text-sm focus:outline-none focus:border-[#4CAF50]" />
+                      <div className="grid grid-cols-2 gap-3">
+                        <input type="text" placeholder="Expiration date (MM / YY)" className="w-full border border-gray-300 rounded p-2.5 text-sm focus:outline-none focus:border-[#4CAF50]" />
+                        <input type="text" placeholder="Security code" className="w-full border border-gray-300 rounded p-2.5 text-sm focus:outline-none focus:border-[#4CAF50]" />
+                      </div>
+                      <input type="text" placeholder="Name on card" className="w-full border border-gray-300 rounded p-2.5 text-sm focus:outline-none focus:border-[#4CAF50]" />
+                    </div>
+                  )}
+                </label>
+
+                {/* COD Option */}
+                <label className={`flex flex-col cursor-pointer ${formData.paymentMethod === 'cod' ? 'bg-[#F8FDF9] border-[#4CAF50]' : ''}`}>
+                  <div className="flex items-center gap-3 p-4">
+                    <input type="radio" name="paymentMethod" value="cod" checked={formData.paymentMethod === 'cod'} onChange={handleInputChange} className="w-4 h-4 text-[#1B5E20] focus:ring-[#4CAF50]" />
+                    <span className="font-medium text-gray-900">Cash on Delivery (COD)</span>
+                  </div>
+                </label>
+              </div>
+
+              <div className="flex flex-col items-center gap-4">
+                <button 
+                  type="submit" 
+                  disabled={isProcessing}
+                  className="w-full bg-[#1B5E20] hover:bg-[#2E7D32] text-white py-4 rounded-lg font-bold text-lg transition-colors shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2" 
+                  style={{ fontFamily: 'var(--font-sans)' }}
+                >
+                  {isProcessing ? (
+                    <span className="animate-pulse">Processing...</span>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4" /> Pay ₹{total.toFixed(2)}
+                    </>
+                  )}
+                </button>
+                <div className="flex items-center justify-center gap-2 text-xs text-gray-400 font-bold uppercase tracking-wider" style={{ fontFamily: 'var(--font-sans)' }}>
+                  <ShieldCheck className="w-4 h-4" /> Secure 256-bit SSL Encryption
+                </div>
+              </div>
+              <div className="mt-6 flex justify-center">
+                <button type="button" onClick={() => setStep(2)} className="text-[#1B5E20] text-sm hover:underline text-center" style={{ fontFamily: 'var(--font-sans)' }}>
+                  <ChevronRight className="w-4 h-4 inline rotate-180" /> Return to shipping
+                </button>
+              </div>
+            </div>
+
+          </form>
+
         </div>
 
-        {/* Right - Cart Summary Sticky Drawer (1 column) */}
-        <div className="bg-white border border-stone/30 rounded-xl p-6 shadow-2xs sticky top-24 space-y-4">
-          <h3 className="font-serif text-lg text-forest border-b border-stone/20 pb-2 flex justify-between items-center">
-            <span>Order Summary</span>
-            <span className="text-xs bg-forest/20 text-forest px-2 py-0.5 rounded-full">{items.length} items</span>
-          </h3>
-
-          <div className="space-y-3 max-h-[160px] overflow-y-auto pr-1">
-            {items.map((item) => (
-              <div key={item.id} className="flex justify-between items-center text-xs">
-                <div className="min-w-0 pr-2">
-                  <p className="font-semibold text-charcoal truncate">{item.name}</p>
-                  <p className="text-stone-500">Qty: {item.quantity} &times; ₹{item.price}</p>
+        {/* Right Side: Order Summary (Sticky Sidebar) */}
+        <div className="w-full lg:w-[45%] xl:w-[40%] bg-[#FAFAFA] border-l border-gray-200 relative pt-10 pb-20 px-4 sm:px-6 lg:px-12">
+          
+          <div className="sticky top-28">
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+              {items.map((item) => (
+                <div key={item.id} className="flex gap-4 items-center relative">
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-white border border-gray-200 rounded-lg overflow-hidden">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    <span className="absolute -top-2 -right-2 bg-gray-500 text-white text-[11px] font-bold w-5 h-5 rounded-full flex items-center justify-center" style={{ fontFamily: 'var(--font-sans)' }}>
+                      {item.quantity}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-900 text-sm font-sans line-clamp-2">{item.name}</h4>
+                    <p className="text-xs text-gray-500" style={{ fontFamily: 'var(--font-sans)' }}>{item.sku}</p>
+                  </div>
+                  <span className="font-medium text-gray-900 text-sm" style={{ fontFamily: 'var(--font-sans)' }}>₹{(item.price * item.quantity).toFixed(2)}</span>
                 </div>
-                <span className="font-bold text-forest shrink-0">₹{(item.price * item.quantity).toFixed(2)}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          <div className="border-t border-stone/20 pt-3 space-y-2 text-xs text-charcoal/90">
-            <div className="flex justify-between">
-              <span>Cart Subtotal</span>
-              <span>₹{subtotal.toFixed(2)}</span>
-            </div>
-            {discountAmount > 0 && (
-              <div className="flex justify-between text-terracotta">
-                <span>Discount ({couponCode})</span>
-                <span>-₹{discountAmount.toFixed(2)}</span>
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="flex gap-2 mb-6">
+                <input
+                  type="text"
+                  placeholder="Discount code or gift card"
+                  className="flex-1 border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-[#4CAF50] bg-white"
+                  style={{ fontFamily: 'var(--font-sans)' }}
+                />
+                <button className="bg-gray-200 text-gray-500 px-4 rounded-lg font-bold text-sm" style={{ fontFamily: 'var(--font-sans)' }}>Apply</button>
               </div>
-            )}
-            <div className="flex justify-between">
-              <span>Shipping</span>
-              <span>{subtotal >= 999 ? 'FREE' : '₹60.00'}</span>
-            </div>
-            <div className="flex justify-between text-sm font-bold text-forest pt-2.5 border-t border-stone/20">
-              <span>Total Bill</span>
-              <span>₹{total.toFixed(2)}</span>
-            </div>
-          </div>
 
-          <div className="flex gap-2 items-center text-[10px] text-stone-500 bg-ivory p-3 rounded-lg border border-stone/20 mt-2">
-            <Lock className="h-4 w-4 text-forest shrink-0" />
-            <p>Payment information is encrypted and transmitted securely via secure SSL protocol.</p>
+              <div className="space-y-3 text-sm" style={{ fontFamily: 'var(--font-sans)' }}>
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotal</span>
+                  <span className="font-medium text-gray-900">₹{subtotal.toFixed(2)}</span>
+                </div>
+                {discountAmount > 0 && (
+                  <div className="flex justify-between text-[#4CAF50]">
+                    <span>Discount</span>
+                    <span className="font-medium">-₹{discountAmount.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-gray-600">
+                  <span>Shipping</span>
+                  <span className="text-gray-500">Calculated at next step</span>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+                <span className="text-lg text-gray-900 font-sans">Total</span>
+                <span className="text-2xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-sans)' }}>
+                  <span className="text-sm font-normal text-gray-500 mr-2">INR</span>
+                  ₹{total.toFixed(2)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 

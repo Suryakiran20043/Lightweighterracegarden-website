@@ -1,305 +1,358 @@
 'use client';
 
-import React, { useState, use, useEffect } from 'react';
+import React, { useState, use } from 'react';
+import Link from 'next/link';
+import { ShoppingBag, Heart, Share2, ChevronRight, CheckCircle2, ShieldCheck, Truck, Clock, ThumbsUp, Star, Package } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart';
 import { useWishlistStore } from '@/lib/store/wishlist';
-import { calculateShippingRates } from '@/lib/shiprocket';
-import { Heart, ShoppingBag, Truck, Calendar, Sparkles, Sprout, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
-
-// Mock DB products matching the catalog
-const dbProducts: Record<string, any> = {
-  'cherry-tomato-seeds': {
-    id: 'var_seeds_1',
-    productId: 'prod_seeds_1',
-    name: 'Premium Cherry Tomato Seeds',
-    category: 'seeds',
-    price: 99,
-    rating: 4.8,
-    images: [
-      'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1594008988647-797de1de3e15?auto=format&fit=crop&w=800&q=80',
-    ],
-    sku: 'SEED-TOM-CHY',
-    stock: 45,
-    desc: 'Grow abundant clusters of sweet, bright red cherry tomatoes right on your terrace. These non-hybrid organic seeds have been selected for high germination rates and urban balcony spacing.',
-    specs: 'Germination Rate: 90% | Sowing Temp: 20-30°C | Harvest Time: 65-75 Days',
-    ingredients: '100% Organic, non-GMO heirloom cherry tomato seeds. Chemically untreated.',
-    grow: 'Sow seeds 0.5 cm deep in lightweight potting soil. Keep moist. Transplant into vertical grow bags once seedlings have 4 true leaves. Place in full sun.',
-    reviews: [
-      { id: '1', author: 'Anil K.', rating: 5, comment: '90% of seeds sprouted within 4 days! Extremely happy with the results on my balcony.', verified: true },
-      { id: '2', author: 'Rekha M.', rating: 4, comment: 'Slightly slow growth initially, but the yields have been very sweet and abundant.', verified: true }
-    ]
-  },
-  'lightweight-potting-soil': {
-    id: 'var_soil_1',
-    productId: 'prod_soil_1',
-    name: 'Lightweight Premium Potting Soil (5 kg)',
-    category: 'fertilizers',
-    price: 399,
-    rating: 4.9,
-    images: [
-      'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?auto=format&fit=crop&w=800&q=80'
-    ],
-    sku: 'SOIL-LT-5KG',
-    stock: 20,
-    desc: 'An expert-grade growing medium designed specifically for terrace gardens. Enriched with organic coco-peat, vermicompost, perlite, and essential mycorrhizae. Reduced weight avoids structural load on rooftops.',
-    specs: 'Weight: 5 kg | Composition: Coco Peat (50%), Compost (40%), Perlite & Mycorrhizae (10%) | Density: ultra-light',
-    ingredients: 'Premium coco-peat, leaf compost, red soil trace, vermicompost, beneficial soil microbes.',
-    grow: 'Ready to use. Simply fill your grow bags or containers, sow seeds or transplant seedlings directly, and water moderately.',
-    reviews: [
-      { id: '1', author: 'Suresh B.', rating: 5, comment: 'Unlike heavy red mud, this soil stays fluffy and lightweight even when wet. A must-have for roof gardening.', verified: true }
-    ]
-  }
-};
+import { products } from '@/lib/data/products';
+import ProductCard from '@/components/shop/ProductCard';
 
 export default function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const product = dbProducts[slug] || dbProducts['cherry-tomato-seeds']; // fallback to cherry-tomato for display
+  const product = products.find(p => p.slug === slug) || products[0]; // fallback to first product
 
-  const [activeImage, setActiveImage] = useState(product.images[0]);
+  const [activeImage, setActiveImage] = useState(product.image);
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState('description');
-  const [pincode, setPincode] = useState('');
-  const [shippingEstimate, setShippingEstimate] = useState<any>(null);
-  const [checkingShipping, setCheckingShipping] = useState(false);
+  const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' });
 
   const { addItem } = useCartStore();
   const { toggleItem, isInWishlist } = useWishlistStore();
-  const inWish = isInWishlist(product.id);
+  
+  const [mounted, setMounted] = useState(false);
+  React.useEffect(() => setMounted(true), []);
+  
+  const inWish = mounted ? isInWishlist(product.id) : false;
 
-  const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      productId: product.productId,
-      name: product.name,
-      price: product.price,
-      sku: product.sku,
-      image: product.images[0]
-    }, quantity);
+  const isSeed = !['pots-planters', 'grocery'].includes(product.category);
+
+  // Gallery array
+  const gallery = [product.image];
+  if (product.hoverImage) gallery.push(product.hoverImage);
+  // Add some fallback gallery images if needed or keep it simple with 2 images
+  
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
+    const x = ((e.pageX - left) / width) * 100;
+    const y = ((e.pageY - top) / height) * 100;
+    setZoomStyle({
+      display: 'block',
+      backgroundPosition: `${x}% ${y}%`,
+    });
   };
 
-  const handleCheckShipping = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pincode.length !== 6) return;
-    setCheckingShipping(true);
-    const est = await calculateShippingRates({ deliveryPincode: pincode, weightInKG: 0.5, subtotal: product.price });
-    setShippingEstimate(est);
-    setCheckingShipping(false);
+  const handleMouseLeave = () => {
+    setZoomStyle({ display: 'none', backgroundPosition: '0% 0%' });
   };
+
+  const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
+  const recentlyViewed = products.slice(5, 9); // mock recently viewed
 
   return (
-    <div className="min-h-screen bg-warm-white py-16 px-4 sm:px-6 lg:px-12 relative z-10 font-alt">
-      <div className="w-full space-y-12">
-        
-        {/* Breadcrumb */}
-        <div className="text-xs text-stone-500 font-semibold space-x-2">
-          <Link href="/shop" className="hover:underline hover:text-forest">Shop</Link>
-          <span>/</span>
-          <span className="text-brown">{product.name}</span>
+    <div className="min-h-screen bg-white">
+      {/* Breadcrumb */}
+      <div className="w-full bg-[#F8F8F8] py-[15px] border-b border-gray-200">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
+          <div className="flex items-center gap-2 text-sm font-medium" style={{ fontFamily: 'var(--font-sans)', color: '#666' }}>
+            <Link href="/" className="hover:text-gray-900 transition-colors">Home</Link>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <Link href={`/shop?category=${product.category}`} className="hover:text-gray-900 transition-colors capitalize">
+              {product.category.replace('-', ' ')}
+            </Link>
+            <ChevronRight className="w-4 h-4 text-gray-400" />
+            <span className="text-gray-900 line-clamp-1">{product.name}</span>
+          </div>
         </div>
+      </div>
 
-        {/* Product Details Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-12">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
           
-          {/* Left - Gallery */}
-          <div className="space-y-4">
-            <div className="h-[400px] sm:h-[500px] border border-stone/30 rounded-xl overflow-hidden bg-white shadow-2xs">
-              <img src={activeImage} alt={product.name} className="w-full h-full object-cover transition-all duration-300" />
-            </div>
-            <div className="flex gap-4">
-              {product.images.map((img: string, idx: number) => (
-                <button
-                  key={idx}
+          {/* Left: Product Image Gallery */}
+          <div className="w-full lg:w-[40%] flex flex-col-reverse sm:flex-row gap-4 h-auto sm:h-[650px] lg:h-[750px] xl:h-[800px]">
+            {/* Vertical Thumbnails */}
+            <div className="flex sm:flex-col gap-3 overflow-x-auto sm:overflow-y-auto sm:w-28 shrink-0 custom-scrollbar pb-2 sm:pb-0">
+              {gallery.map((img, idx) => (
+                <button 
+                  key={idx} 
                   onClick={() => setActiveImage(img)}
-                  className={`h-20 w-20 rounded-md border overflow-hidden bg-white ${
-                    activeImage === img ? 'border-forest ring-2 ring-forest/20' : 'border-stone/30 hover:border-forest'
-                  }`}
+                  className={`w-24 h-28 sm:w-full sm:h-32 rounded-xl border-2 overflow-hidden bg-white shrink-0 ${activeImage === img ? 'border-[#4CAF50]' : 'border-gray-200 hover:border-gray-300'} transition-colors`}
                 >
-                  <img src={img} alt="thumbnail" className="h-full w-full object-cover" />
+                  <img src={img} alt={`Thumbnail ${idx}`} className="w-full h-full object-contain p-2" />
                 </button>
               ))}
             </div>
+
+            {/* Large Viewer with Zoom Lens */}
+            <div 
+              className="flex-1 bg-white border border-gray-200 rounded-2xl overflow-hidden relative cursor-crosshair group"
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              <img src={activeImage} alt={product.name} className="w-full h-full object-contain p-8" />
+              
+              {/* Badges inside image */}
+              <div className="absolute top-4 left-4 flex flex-col gap-2">
+                {product.isOrganic && (
+                  <span className="bg-[#2E7D32] text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded shadow-sm" style={{ fontFamily: 'var(--font-sans)' }}>
+                    100% Organic
+                  </span>
+                )}
+                {product.discount > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded shadow-sm" style={{ fontFamily: 'var(--font-sans)' }}>
+                    {product.discount}% OFF
+                  </span>
+                )}
+              </div>
+
+              {/* Zoom Lens Element */}
+              <div 
+                className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 bg-white"
+                style={{
+                  ...zoomStyle,
+                  backgroundImage: `url(${activeImage})`,
+                  backgroundSize: '250%',
+                  backgroundRepeat: 'no-repeat',
+                }}
+              />
+            </div>
           </div>
 
-          {/* Right - Product configuration */}
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <span className="text-xs font-semibold text-brown uppercase tracking-wider">{product.category}</span>
-              <h1 className="text-3xl sm:text-4xl font-serif text-forest tracking-tight">{product.name}</h1>
-              <div className="flex items-center gap-2 text-xs font-semibold text-charcoal/80">
-                <span>★ {product.rating}</span>
-                <span className="text-stone-400">|</span>
-                <span>SKU: {product.sku}</span>
-                <span className="text-stone-400">|</span>
-                <span className={product.stock > 5 ? 'text-forest' : 'text-terracotta'}>
-                  {product.stock > 5 ? 'In Stock' : `Low Stock: ${product.stock} left`}
-                </span>
+          {/* Right: Product Information */}
+          <div className="w-full lg:w-[50%] xl:w-[45%] flex flex-col">
+            <h1 className="text-2xl sm:text-3xl font-sans font-bold text-gray-800 mb-2 leading-tight">
+              {product.name}
+            </h1>
+            
+            <div className="flex items-center gap-2 mb-6" style={{ fontFamily: 'var(--font-sans)' }}>
+              <div className="flex items-center text-[#D4AF37] text-lg">
+                {'★'.repeat(Math.floor(product.rating))}
+                {'☆'.repeat(5 - Math.floor(product.rating))}
+              </div>
+              <span className="text-sm text-gray-500 underline cursor-pointer hover:text-gray-900">({product.reviewsCount} customer reviews)</span>
+            </div>
+
+            <div className="mb-6 border-b border-gray-100 pb-6" style={{ fontFamily: 'var(--font-sans)' }}>
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="text-[32px] font-bold text-gray-900">₹{product.price}</span>
+                {product.discount > 0 && (
+                  <>
+                    <span className="text-lg text-gray-500 line-through">₹{product.originalPrice}</span>
+                    <span className="text-[13px] font-bold text-[#2E7D32] bg-[#E8F5E9] px-2 py-0.5 rounded">Save {product.discount}%</span>
+                  </>
+                )}
+              </div>
+              <p className="text-[13px] text-gray-500">Inclusive of all taxes</p>
+            </div>
+
+            <p className="text-gray-600 mb-8 leading-relaxed text-[15px]" style={{ fontFamily: 'var(--font-sans)' }}>
+              {product.desc} {isSeed && 'This premium seed variety has been rigorously tested for high germination rates and robust growth in lightweight terrace setups.'}
+            </p>
+
+            <div className="space-y-4 mb-10" style={{ fontFamily: 'var(--font-sans)' }}>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center border border-gray-300 rounded-md h-[46px] w-[120px]">
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="flex-1 h-full flex items-center justify-center text-gray-600 hover:text-gray-900 text-xl font-medium">−</button>
+                  <span className="w-10 text-center font-bold text-gray-900">{quantity}</span>
+                  <button onClick={() => setQuantity(quantity + 1)} className="flex-1 h-full flex items-center justify-center text-gray-600 hover:text-gray-900 text-xl font-medium">+</button>
+                </div>
+                <button 
+                  onClick={() => toggleItem(product)}
+                  className={`w-[46px] h-[46px] rounded-md border flex items-center justify-center transition-colors shrink-0 ${inWish ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-gray-400 hover:text-red-500'}`}
+                  title="Add to Wishlist"
+                >
+                  <Heart className={`w-5 h-5 ${inWish ? 'fill-current' : ''}`} />
+                </button>
+              </div>
+              
+              <div className="flex flex-col gap-3 pt-2">
+                <button 
+                  onClick={() => addItem(product, quantity)}
+                  className="w-full h-[48px] border-2 border-[#2E7D32] text-[#2E7D32] hover:bg-[#2E7D32] hover:text-white rounded-md font-bold transition-colors uppercase tracking-wide text-[13px]"
+                >
+                  Add to Cart
+                </button>
+                <button 
+                  onClick={() => { addItem(product, quantity); window.location.href = '/checkout'; }}
+                  className="w-full h-[48px] bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-md font-bold transition-colors uppercase tracking-wide text-[13px] shadow-sm"
+                >
+                  Buy it Now
+                </button>
               </div>
             </div>
 
-            <div className="text-2xl font-bold text-forest">₹{product.price.toFixed(2)}</div>
-            <p className="text-sm text-charcoal/80 leading-relaxed">{product.desc}</p>
-
-            {/* Actions Panel */}
-            <div className="flex flex-wrap items-center gap-4 pt-4 border-t border-stone/30">
-              <div className="flex items-center border border-stone/30 rounded-md">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-3 py-2 text-charcoal hover:bg-stone/10"
-                >
-                  -
-                </button>
-                <span className="px-4 font-bold text-sm text-charcoal">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="px-3 py-2 text-charcoal hover:bg-stone/10"
-                >
-                  +
-                </button>
+            {/* Kalagura Style Trust Icons */}
+            <div className="flex items-center justify-between py-6 border-t border-b border-gray-100 mb-8" style={{ fontFamily: 'var(--font-sans)' }}>
+              <div className="flex flex-col items-center gap-2">
+                <CheckCircle2 className="w-6 h-6 text-[#2E7D32]" strokeWidth={1.5} />
+                <span className="text-[11px] font-medium text-gray-600 uppercase text-center leading-tight">Quality<br/>Assured</span>
               </div>
-
-              <button
-                onClick={handleAddToCart}
-                className="flex-1 min-w-[200px] flex items-center justify-center gap-2 bg-forest hover:bg-moss text-warm-white py-3.5 rounded-md font-medium text-sm transition-all duration-300 shadow-md hover:translate-y-[-1px]"
-              >
-                <ShoppingBag className="h-4 w-4" />
-                Add to Cart
-              </button>
-
-              <button
-                onClick={() => toggleItem({ id: product.id, name: product.name, price: product.price, image: product.images[0] })}
-                className={`p-3.5 rounded-md border shadow-2xs transition-colors duration-200 ${
-                  inWish ? 'bg-terracotta border-terracotta text-white' : 'bg-white border-stone/30 text-stone-400 hover:text-terracotta'
-                }`}
-                aria-label="Toggle Wishlist"
-              >
-                <Heart className="h-4 w-4 fill-current" />
-              </button>
+              <div className="flex flex-col items-center gap-2">
+                <Truck className="w-6 h-6 text-[#2E7D32]" strokeWidth={1.5} />
+                <span className="text-[11px] font-medium text-gray-600 uppercase text-center leading-tight">Fast<br/>Delivery</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <ShieldCheck className="w-6 h-6 text-[#2E7D32]" strokeWidth={1.5} />
+                <span className="text-[11px] font-medium text-gray-600 uppercase text-center leading-tight">Secure<br/>Checkout</span>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <ThumbsUp className="w-6 h-6 text-[#2E7D32]" strokeWidth={1.5} />
+                <span className="text-[11px] font-medium text-gray-600 uppercase text-center leading-tight">High<br/>Germination</span>
+              </div>
             </div>
 
-            {/* Logistics Pincode Check */}
-            <form onSubmit={handleCheckShipping} className="pt-6 border-t border-stone/30 space-y-3">
-              <label className="text-xs font-semibold text-charcoal flex items-center gap-1.5">
-                <Truck className="h-4 w-4 text-forest" />
-                <span>Estimate Logistics Delivery (Shiprocket)</span>
-              </label>
-              <div className="flex gap-2 max-w-sm">
-                <input
-                  type="text"
-                  maxLength={6}
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Enter 6-digit Pincode"
-                  className="flex-1 bg-white border border-stone/30 rounded-md px-3 py-2 text-xs font-semibold focus:outline-none focus:border-forest"
-                  required
-                />
-                <button
-                  type="submit"
-                  disabled={checkingShipping}
-                  className="bg-stone hover:bg-stone/80 text-charcoal px-4 py-2 rounded-md text-xs font-semibold transition-colors"
-                >
-                  Check
-                </button>
-              </div>
-              {shippingEstimate && (
-                <div className="text-xs bg-ivory border border-stone/20 p-3 rounded-md flex items-center gap-4 text-charcoal/90">
-                  <div className="flex items-center gap-1"><Calendar className="h-4 w-4 text-forest" /> ETA: {shippingEstimate.eta}</div>
-                  <div className="text-stone-400">|</div>
-                  <div>Carrier: {shippingEstimate.carrier}</div>
-                  <div className="text-stone-400">|</div>
-                  <div className="font-bold text-forest">
-                    {shippingEstimate.rate === 0 ? 'FREE Shipping' : `Rate: ₹${shippingEstimate.rate}`}
+            {/* Accordions */}
+            <div className="space-y-3" style={{ fontFamily: 'var(--font-sans)' }}>
+              <details className="group border border-gray-200 rounded-md bg-white overflow-hidden" open>
+                <summary className="flex items-center justify-between cursor-pointer p-4 font-bold text-sm text-gray-800 uppercase tracking-wide list-none [&::-webkit-details-marker]:hidden bg-gray-50">
+                  Description
+                  <span className="transition group-open:rotate-180">
+                    <ChevronRight className="w-4 h-4 rotate-90" />
+                  </span>
+                </summary>
+                <div className="p-4 text-gray-600 text-sm leading-relaxed border-t border-gray-100">
+                  <p className="mb-3">{product.desc}</p>
+                  <p>Our seeds are organically sourced and specifically selected for home gardeners. They are highly resilient, open-pollinated, and guaranteed to yield a rich, nutritious harvest when provided with the right soil, water, and sunlight.</p>
+                </div>
+              </details>
+
+              {isSeed && (
+                <details className="group border border-gray-200 rounded-md bg-white overflow-hidden">
+                  <summary className="flex items-center justify-between cursor-pointer p-4 font-bold text-sm text-gray-800 uppercase tracking-wide list-none [&::-webkit-details-marker]:hidden bg-gray-50">
+                    How to Grow
+                    <span className="transition group-open:rotate-180">
+                      <ChevronRight className="w-4 h-4 rotate-90" />
+                    </span>
+                  </summary>
+                  <div className="p-4 text-gray-600 text-sm leading-relaxed border-t border-gray-100">
+                    <ul className="list-disc pl-5 space-y-2">
+                      <li><strong>Soil:</strong> Use a well-draining potting mix rich in organic compost.</li>
+                      <li><strong>Sowing:</strong> Sow seeds 0.5 inches deep. Keep the soil consistently moist until germination.</li>
+                      <li><strong>Sunlight:</strong> Requires 6-8 hours of direct sunlight per day.</li>
+                      <li><strong>Watering:</strong> Water deeply when the top inch of soil feels dry. Do not overwater.</li>
+                    </ul>
+                  </div>
+                </details>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* Customer Reviews Section */}
+      <div className="bg-[#FAFAFA] py-16 border-t border-gray-200">
+        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12">
+          <h2 className="text-3xl font-serif font-bold text-gray-900 mb-10 text-center">Customer Reviews</h2>
+          
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+            {/* Reviews Summary */}
+            <div className="w-full lg:w-[35%]">
+              <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 sticky top-24">
+                <div className="flex items-center gap-5 mb-8">
+                  <span className="text-6xl font-bold text-gray-900 font-sans">{product.rating.toFixed(1)}</span>
+                  <div>
+                    <div className="flex text-[#D4AF37] text-2xl mb-1">
+                      {'★'.repeat(Math.floor(product.rating))}
+                      {'☆'.repeat(5 - Math.floor(product.rating))}
+                    </div>
+                    <span className="text-base text-gray-500 font-sans">Based on {product.reviewsCount} reviews</span>
                   </div>
                 </div>
-              )}
-            </form>
+                
+                {/* Breakdown */}
+                <div className="space-y-4 mb-10" style={{ fontFamily: 'var(--font-sans)' }}>
+                  {[5, 4, 3, 2, 1].map(stars => {
+                    const percent = stars === 5 ? 75 : stars === 4 ? 15 : stars === 3 ? 5 : 2.5;
+                    return (
+                      <div key={stars} className="flex items-center gap-4 text-base">
+                        <span className="w-14 text-gray-600 flex items-center gap-1.5 font-medium">{stars} <Star className="w-4 h-4 fill-current text-gray-400" /></span>
+                        <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-[#D4AF37] rounded-full" style={{ width: `${percent}%` }}></div>
+                        </div>
+                        <span className="w-10 text-right text-gray-500 font-medium">{percent}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
 
-          </div>
-
-        </div>
-
-        {/* Tabs details */}
-        <div className="border-t border-stone/30 pt-10">
-          <div className="flex border-b border-stone/20 overflow-x-auto gap-8 pb-3">
-            {[
-              { id: 'description', name: 'Description' },
-              { id: 'specifications', name: 'Specifications' },
-              { id: 'how-to-grow', name: 'How to Grow' },
-              { id: 'reviews', name: 'Reviews' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`text-sm font-semibold tracking-wide whitespace-nowrap pb-2 transition-colors ${
-                  activeTab === tab.id ? 'border-b-2 border-forest text-forest' : 'text-stone-400 hover:text-forest'
-                }`}
-              >
-                {tab.name}
-              </button>
-            ))}
-          </div>
-
-          <div className="py-6 text-sm text-charcoal/80 leading-relaxed font-alt">
-            {activeTab === 'description' && (
-              <div className="space-y-4">
-                <p>{product.desc}</p>
-                <p className="font-bold text-forest flex items-center gap-1.5"><Sparkles className="h-4 w-4" /> Eco Benefit: {product.ingredients}</p>
+                <button className="w-full border-2 border-gray-900 text-gray-900 py-4 rounded-xl font-bold text-lg hover:bg-gray-900 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-sans)' }}>
+                  Write a Review
+                </button>
               </div>
-            )}
-            {activeTab === 'specifications' && (
-              <p>{product.specs}</p>
-            )}
-            {activeTab === 'how-to-grow' && (
-              <div className="space-y-3 bg-ivory p-4 rounded-lg border border-stone/20">
-                <h4 className="font-serif text-forest font-bold text-base flex items-center gap-1.5"><Sprout className="h-5 w-5" /> Planting Routine</h4>
-                <p className="text-xs leading-relaxed">{product.grow}</p>
+            </div>
+
+            {/* Review List */}
+            <div className="w-full lg:w-[65%]">
+              <div className="flex justify-between items-center mb-8 border-b border-gray-200 pb-5" style={{ fontFamily: 'var(--font-sans)' }}>
+                <span className="font-bold text-gray-900 text-lg">{product.reviewsCount} Reviews</span>
+                <select className="border-none bg-transparent font-medium text-gray-600 focus:ring-0 cursor-pointer text-base">
+                  <option>Most Recent</option>
+                  <option>Highest Rating</option>
+                  <option>Lowest Rating</option>
+                </select>
               </div>
-            )}
-            {activeTab === 'reviews' && (
+
               <div className="space-y-6">
-                {product.reviews.map((r: any) => (
-                  <div key={r.id} className="border-b border-stone/10 pb-4 space-y-1.5">
-                    <div className="flex justify-between items-center text-xs font-semibold">
-                      <span className="text-charcoal">{r.author}</span>
-                      <span className="text-forest">{'★'.repeat(r.rating)}</span>
+                {[
+                  { name: "Anjali S.", rating: 5, date: "October 12, 2025", text: "Excellent germination rate! Planted these on my terrace and they sprouted beautifully within a week. The packaging was also very sturdy and premium.", verified: true },
+                  { name: "Rajesh K.", rating: 4, date: "September 28, 2025", text: "Good quality seeds. Took a bit longer to germinate than expected, but the yield was great. Will buy again.", verified: true },
+                  { name: "Priya M.", rating: 5, date: "August 05, 2025", text: "100% organic and true to their word. The delivery was fast via Speed Post. Highly recommend Light Weight Terrace Garden!", verified: true }
+                ].map((review, i) => (
+                  <div key={i} className="bg-white p-8 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-1.5">
+                          <span className="font-bold text-gray-900 text-lg font-sans">{review.name}</span>
+                          {review.verified && (
+                            <span className="flex items-center gap-1.5 text-[#2E7D32] text-xs font-bold uppercase tracking-wider bg-[#E8F5E9] px-3 py-1 rounded-full" style={{ fontFamily: 'var(--font-sans)' }}>
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Verified Purchase
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex text-[#D4AF37] text-base mb-1">
+                          {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+                        </div>
+                      </div>
+                      <span className="text-sm text-gray-400 font-medium" style={{ fontFamily: 'var(--font-sans)' }}>{review.date}</span>
                     </div>
-                    <p className="text-xs text-charcoal/80 italic">"{r.comment}"</p>
-                    {r.verified && (
-                      <span className="inline-block bg-forest/10 text-forest text-[10px] font-bold px-2 py-0.5 rounded-full">
-                        Verified Buyer
-                      </span>
-                    )}
+                    <p className="text-gray-600 text-base leading-relaxed mb-6" style={{ fontFamily: 'var(--font-sans)' }}>{review.text}</p>
+                    <button className="flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-gray-900 transition-colors" style={{ fontFamily: 'var(--font-sans)' }}>
+                      <ThumbsUp className="w-5 h-5" /> Helpful (0)
+                    </button>
                   </div>
                 ))}
               </div>
-            )}
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Cross-Sell Recommendations */}
-        <div className="border-t border-stone/30 pt-12 space-y-6">
-          <h3 className="font-serif text-2xl text-forest">Frequently Bought Together</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {[
-              { id: 'rec-1', name: 'Premium Coco Peat Block (1 kg)', price: 149, image: 'https://images.unsplash.com/photo-1599599810769-bcde5a160d32?auto=format&fit=crop&w=400&q=80', slug: 'cherry-tomato-seeds' },
-              { id: 'rec-2', name: 'Neem Cake Powder (1 kg)', price: 120, image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&w=400&q=80', slug: 'cherry-tomato-seeds' },
-              { id: 'rec-3', name: 'Jaggery Sweets Millet Mix', price: 240, image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&w=400&q=80', slug: 'cherry-tomato-seeds' },
-            ].map((rec) => (
-              <div key={rec.id} className="flex gap-4 p-4 bg-white border border-stone/30 rounded-lg items-center shadow-2xs hover:shadow-xs transition-shadow">
-                <img src={rec.image} alt={rec.name} className="h-16 w-16 object-cover rounded-md border border-stone/10" />
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-alt text-xs font-bold text-charcoal line-clamp-1">{rec.name}</h4>
-                  <p className="text-xs text-forest font-semibold mt-0.5">₹{rec.price}</p>
-                  <Link href={`/shop/${rec.slug}`} className="inline-flex items-center gap-0.5 text-[10px] text-brown font-bold hover:underline mt-1.5">
-                    View product <ArrowRight className="h-3 w-3" />
-                  </Link>
-                </div>
+      {/* Recently Viewed & Best Selling */}
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-16 space-y-20 overflow-hidden">
+        
+        <section>
+          <h2 className="text-4xl font-serif font-bold text-gray-900 mb-10">Recently Viewed Products</h2>
+          <div className="flex overflow-x-auto gap-8 pb-4 snap-x snap-mandatory hide-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            {recentlyViewed.map((item) => (
+              <div key={`recent-${item.id}`} className="min-w-[280px] sm:min-w-0 sm:flex-1 snap-start shrink-0">
+                <ProductCard product={item} />
               </div>
             ))}
           </div>
-        </div>
+        </section>
+
+        <section>
+          <div className="flex justify-between items-end mb-10">
+            <h2 className="text-4xl font-serif font-bold text-gray-900">Best Selling Products</h2>
+            <Link href="/shop" className="text-[#1B5E20] font-bold text-lg hover:underline" style={{ fontFamily: 'var(--font-sans)' }}>View All</Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 sm:gap-8">
+            {bestSellers.map((item) => (
+              <ProductCard key={`best-${item.id}`} product={item} />
+            ))}
+          </div>
+        </section>
 
       </div>
     </div>
